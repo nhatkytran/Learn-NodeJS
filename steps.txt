@@ -1,0 +1,23 @@
+SECTION - 6
+
+1. app.js
+2. npm install express
+3. npm install nodemon --save-dev
+4. "start": "nodemon app.js --inspect"
+5. Handle POST - req.body (app.use(express.json() and app.use(express.urlencoded({ extended: true }))))
+6. npm install morgan --> app.use(morgan('dev'))
+7. Mount router
+- app.get(< path >, callback)
+- app.route(< path >).get(callback)
+- app.use(< path >, router)
+--> router.route(< sub - path>).get(callback)
+8. app.js, server.js, controllers (tourController.js), routes (tourRoutes.js)
+9. Use param middleware for validation
+10. Chaining multiple middleware functions
+11. Serving static files: app.use(express.static(< path >))
+12. Environment variables: process.env
+--> NODE_ENV=development nodemon server.js --inspect
+--> Use config.env
+npm install dotenv
+dotenv.config({ path: < path > })
+13. morgan --> run on development environment
