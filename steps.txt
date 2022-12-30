@@ -21,3 +21,79 @@ SECTION - 6
 npm install dotenv
 dotenv.config({ path: < path > })
 13. morgan --> run on development environment
+
+SECTION - 8
+
+1. Connect database with the Express Application
+npm install mongoose
+--> Configuration: Database's password <PASSWORD>, Database's name
+Options: { useNewUrlParser: true, useUnifiedTopology: true }
+2. Create Schema and Model
+3. MVC Architecture - models Folder
+4. CRUD operations with real database
+- Create --> model.create
+- Read --> model.find, model.findById
+- Update --> model.findByIdAndUpdate
+- Delete --> model.findByIdAndDelete
+5. Modeling the tours
+6. Write script to import development data
+--> import-dev-data.js
+--> model.create(array)
+--> model.deleteMany
+process.argv
+process.exit()
+--import
+--delete
+7. Query string --> ?a=1&b=2 --> req.query
+- Special query fields (page, sort, limit, fields)
+- No need to exclude fields in query in Mongoose version 6 and above
+--> Mongoose only cares if fields defined in Schema
+- Understance chaining query
+8. Advanced filtering
+field[gt] = number
+--> query throw CastError
+9. Sorting -- 1 or more fields
+--> By default, sort using _id --> more efficient
+10. Limit field --> Project --> model.select
+11. Pagination
+12. Aliasing --> 5 best cheap tours --> sort=-ratingAverage,price
+--> Middleware --> aliasTopTours
+13. API Features
+--> APIFeatures as the async function returning class APIFeatures
+14. Aggregate Pipeline
+--> getTourStats --> model.Aggregate
+- $match
+- $group
+- $sort
+- $match
+--> Unwinding --> getMonthlyPlan
+{ a: [1, 2, 3] }
+-- Result --
+{ a: 1 }, { a: 2 }, { a: 3 }
+15. Virtual properties
+schema definition
+schema options --> {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+  id: false,
+}
+16. Middleware --> pre and post hooks (this vs docs)
+
+-- Document --
+npm install slugify
+--> 'save' acts on .save() and .create()
+--> this --> document
+Schema --> slug: { type: String }
+
+-- Query --
+--> /^find/
+--> this --> query
+--> post --> docs
+Schema --> secretTour: { type: Boolean, default: false }
+
+- Aggregation --> Exclude secretTour
+
+17. Validation --> Built-in & Custom
+Compare value A with value B --> Can not update value A and value B at once
+--> npm install validator
+--> use regex to check if name only contains space and letter
