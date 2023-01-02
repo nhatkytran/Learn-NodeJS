@@ -26,6 +26,7 @@ SECTION - 8
 
 1. Connect database with the Express Application
 npm install mongoose
+--> Mongoose --> ODM --> Object Data Modeling
 --> Configuration: Database's password <PASSWORD>, Database's name
 Options: { useNewUrlParser: true, useUnifiedTopology: true }
 2. Create Schema and Model
