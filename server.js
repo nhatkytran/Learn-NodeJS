@@ -1,3 +1,10 @@
+process.on('uncaughtException', error => {
+  console.error('\n--- UNCAUGHT EXCEPTION! Shutting down... ---\n');
+  console.error(error);
+
+  process.exit(1);
+});
+
 const path = require('path');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
@@ -13,6 +20,8 @@ const DB = DATABASE.replace('<NAME>', DATABASE_NAME).replace(
   DATABASE_PASSWORD
 );
 
+let server;
+
 mongoose.set('strictQuery', true);
 mongoose
   .connect(DB, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -20,11 +29,14 @@ mongoose
     console.log('Database connection - Successful');
 
     const port = PORT || 3000;
-    app.listen(port, '127.0.0.1', () => {
+    server = app.listen(port, '127.0.0.1', () => {
       console.log(`App running on port ${port}...`);
     });
-  })
-  .catch(error => {
-    console.error('Database connection - Failed!');
-    console.error(error);
   });
+
+process.on('unhandledRejection', error => {
+  console.error('\n--- UNHANDLED REJECTION! Shutting down... ---\n');
+  console.error(error);
+
+  if (server) server.close(() => process.exit(1));
+});

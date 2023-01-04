@@ -2,6 +2,9 @@ const express = require('express');
 const morgan = require('morgan');
 const path = require('path');
 
+const globalErrorHandler = require('./controllers/errorController');
+const { AppError } = require('./utils');
+
 const app = express();
 
 const tourRouter = require('./routes/tourRoutes');
@@ -27,5 +30,15 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+
+// Unhandled routes
+
+app.all('*', (req, _, next) =>
+  next(new AppError(`${req.originalUrl} not found!`, 404))
+);
+
+// Global Error Handling Middleware
+
+app.use(globalErrorHandler);
 
 module.exports = app;

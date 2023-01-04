@@ -98,3 +98,30 @@ Schema --> secretTour: { type: Boolean, default: false }
 Compare value A with value B --> Can not update value A and value B at once
 --> npm install validator
 --> use regex to check if name only contains space and letter
+
+SECTION - 9
+
+1. Unhandled Routes
+app.all('*', callback) --> status: fail
+2. Global Error Handling Middleware --> Seaparation of Concerns --> status: error
+--> Operational Errors (Exceptions)
+--> Programming Errors
+--> app.use((error, req, res, next) --> 4 arguments --> Express knows that this is Gloabl Error Handling Middleware)
+--> next(< error >) --> Global Error Handling Middleware
+3. Custom Errors
+appError.js --> AppError --> statusCode, status, message
+isOperational = true
+Error.captureStackTrace(this, this.constructor)
+errorController.js --> globalErrorHandler
+new AppError vs new Error
+4. catchAsync.js
+5. 404 Not Found Errors
+6. Errors: Development vs Production
+--> Operational Error
+7. Operational Error
+Invalid ID (CastError)
+Duplicate value --> code = 11000
+ValidationError
+8. Unhandled Rejections --> Wrong DB password, etc,... --> Asynchronous
+process.exit(0 | 1); 0 --> Success; 1 --> Exception
+9. Uncaught Exceptions
