@@ -36,6 +36,12 @@ const handleDuplicateError = error => {
   );
 };
 
+const handleJWTError = () =>
+  new AppError('Invalid token! Please login again.', 401);
+
+const handleTokenExpiredError = () =>
+  new AppError('Token has expired! Please login again.', 401);
+
 const globalErrorHandler = (error, _, res, __) => {
   let newError = NODE_ENV === 'development' ? error : Object.create(error);
 
@@ -49,6 +55,13 @@ const globalErrorHandler = (error, _, res, __) => {
 
     // Duplicate Error
     if (newError.code === 11000) newError = handleDuplicateError(newError);
+
+    // Invalid JWT Error
+    if (newError.name === 'JsonWebTokenError') newError = handleJWTError();
+
+    // Token Expired Error
+    if (newError.name === 'TokenExpiredError')
+      newError = handleTokenExpiredError();
   }
 
   const statusCode = newError.statusCode || 500;

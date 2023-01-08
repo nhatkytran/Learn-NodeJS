@@ -82,7 +82,7 @@ schema options --> {
 
 -- Document --
 npm install slugify
---> 'save' acts on .save() and .create()
+--> 'save' acts on .save() and .create() --> also works with findByIdAndUpdate
 --> this --> document
 Schema --> slug: { type: String }
 
@@ -125,3 +125,107 @@ ValidationError
 8. Unhandled Rejections --> Wrong DB password, etc,... --> Asynchronous
 process.exit(0 | 1); 0 --> Success; 1 --> Exception
 9. Uncaught Exceptions
+
+SECTION - 10
+
+1. Model and Create Users
+--> npm install validator
+2. Create User --> authController.js
+--> signup --> convert password and passwordConfirm to String
+3. Manage Password --> password encryption / password hashing
+Create --> Schema Validation --> Pre hook --> Main query --> Post hook --> Send response
+--> passwordConfirm validation --> set undefined --> not get save into database
+--> Encrypt password
+--> npm install bcryptjs --> bcrypt implementation for Javascript
+--> bcryptHash
+4. JWT
+Signing up Users
+--> npm install jsonwebtoken
+--> signJWT
+Logging in Users --> bcryptCompare
+--> Sign token if user exists and password is correct (email and password)
+- Check if email and password exist
+- Check if email - user exists and password is correct --> password { select: false } --> select('+password')
+- If everything ok, send token
+--> select('password') --> select only field password
+--> select('+password') --> select password (add up)
+--> correctPassword --> bcrypt.compare
+5. Protect Tour Routes --> 401 --> Unauthorized
+--> Setting headers in Postman
+--> Check authorization --> req.headers.authorization.startsWith('Bearer')
+--> Get token --> Verify token --> decoded { id, iat, exp }
+--> Handle JWT error --> Invalid JWT and Expired JWT (90d or 5)
+JsonWebTokenError
+TokenExpiredError
+--> Check if user still exists
+--> Check if user changed password after JWT was issued --> changePassword
+passwordChangedAt { type: Date }
+--> Grant access to protected routes --> req.user = currentUser --> next()
+--> req travels from middleware to the next one --> put data on req
+6. Advanced Postman setup --> Environment variables
+--> {{URL}}
+--> {{jwt}} --> Postman --> Tests --> pm.environment.set("jwt", pm.response.json().token);
+7. Authorization: User - Roles and Permissions --> 403: Forbidden
+role { type: String, enum: ['user', 'guide', 'lead-guide', 'admin'], default: 'user' }
+protect --> restrictTo --> main route (restrictTo('admin', 'lead-guide'))
+8. Reset Token --> forgotPassword (POST) --> resetPassword (PATCH)
++++ forgotPassword +++
+--> createPasswordResetToken --> crypto.randomBytes & crypto.createHash
+--> passwordResetToken { type: String, select: false }, passwordResetExpires { type: Date, select: false }
+--> resetToken & passwordResetToken
+--> modify document --> save document --> document.save({ validateModifiedOnly: true })
+--> create (new fields) --> update(old fields) --> save (add new fields)
++++ send reset token via email +++
+--> npm install nodemailer --> configure to send email in NodeJS
+--> create transporter --> configure options --> send email
+--> user Mailtrap to send email
+--> handle error sending email
++++ resetPassword +++
+--> get email & token --> hashed token --> find user { email, passwordResetToken, passwordResetExpires }
+--> check password and passwordConfirm --> validate --> save
+--> update passwordChangedAt --> this.isModified(< field >) & this.isNew
+--> send jwt
+9. Update user password
+--> user 'save' instead of 'findByIdAndUpdate' case 'findByIdAndUpdate' has some quirk with validation
+--> createSendToken
+10. Update user's data --> updateMe --> use findByIdAndUpdate --> use filterObject
+11. Delete user
+--> active { type: Boolean, default: true, select: false } --> deleteMe --> active = false
+--> user query middleware to prevent finding inactive user
+10. + 11. route /me for both update and delete
+GDPR --> General Data Protection Regulation
+12. Security
+--> Compromised Database
+--> Brute Force Attacks
+--> Cross-site Scripting (XSS) Attacks
+--> Denial Of Service (DOS) Attacks
+--> NoSQL Query Injection
+...
+12.1. Sending JWT via Cookie
+--> JWT_COOKIE_EXPIRES_IN
+--> Remove password when create new user
+12.2. Rate limiting
+--> npm install express-rate-limit --> rateLimit
+--> configure limiter --> app.use('/api', limiter);
+12.3. Security HTTP Headers
+--> npm install helmet --> helmet
+--> app.use(helmet()) --> set headers --> place on top of middleware stack
+--> Limit data from body --> app.use(express.json({ limit: '10kb' }));
+--> CORS --> Whho can use API
+12.4 Data sanitization
+--> Defend against NoSQL Query Injection --> npm install mongo-express-sanitize --> mongoSanitize
+--> "email": { "$gt": "" }
+--> Defend against Cross - Site Scripting --> npm install xss-clean --> xss
+--> "name": "<div></div>"
+(
+  app.use(express.json({ limit: '10kb' }));
+  app.use(express.urlencoded({ extended: true }));
+) --> Recieve data
+--> Clean data from malicious code
+12.5. Prevent parameter pollution
+--> sort&sort
+--> npm install hpp
+--> app.use(hpp({
+  whitelist: ['duration', 'ratingsQuantity', 'ratingsAverage',
+  'maxGroupSize', 'difficulty', 'price']
+}));

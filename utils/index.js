@@ -1,4 +1,10 @@
-exports.APIFeatures = require('./apiFeatures');
-exports.requiredMessage = require('./requiredMessage');
 exports.AppError = require('./appError');
+exports.APIFeatures = require('./apiFeatures');
+exports.bcryptCompare = require('./bcryptCompare');
+exports.bcryptHash = require('./bryptHash');
 exports.catchAsync = require('./catchAsync');
+exports.createSendToken = require('./createSendToken');
+exports.requiredMessage = require('./requiredMessage');
+exports.signJWT = require('./signJWT');
+exports.verifyJWT = require('./verifyJWT');
+exports.sendEmail = require('./sendEmail');
