@@ -3,14 +3,20 @@ const path = require('path');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
-const { Tour } = require('./../../models');
+const { Tour, User, Review } = require('./../../models');
 
 dotenv.config({ path: path.join(__dirname, '..', '..', 'config.env') });
 
 const { DATABASE, DATABASE_NAME, DATABASE_PASSWORD } = process.env;
 
 const tours = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'tours-simple.json'), 'utf-8')
+  fs.readFileSync(path.join(__dirname, 'tours.json'), 'utf-8')
+);
+const users = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'users.json'), 'utf-8')
+);
+const reviews = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'reviews.json'), 'utf-8')
 );
 
 const DB = DATABASE.replace('<NAME>', DATABASE_NAME).replace(
@@ -20,8 +26,9 @@ const DB = DATABASE.replace('<NAME>', DATABASE_NAME).replace(
 
 const importData = async () => {
   try {
-    const query = Tour.create(tours);
-    await query;
+    await Tour.create(tours, { validateBeforeSave: false });
+    await User.create(users, { validateBeforeSave: false });
+    await Review.create(reviews, { validateBeforeSave: false });
 
     console.log('Data import - Successful!');
   } catch (error) {
@@ -34,8 +41,9 @@ const importData = async () => {
 
 const deleteData = async () => {
   try {
-    const query = Tour.deleteMany();
-    await query;
+    await Tour.deleteMany();
+    await User.deleteMany();
+    await Review.deleteMany();
 
     console.log('Data delete - Successful!');
   } catch (error) {

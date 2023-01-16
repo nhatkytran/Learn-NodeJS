@@ -4,7 +4,11 @@ const mongoose = require('mongoose');
 const userSchemaDefinition = require('./userSchemaDefinition');
 const { bcryptHash, bcryptCompare } = require('./../../utils');
 
-const userSchema = new mongoose.Schema(userSchemaDefinition);
+const userSchema = new mongoose.Schema(userSchemaDefinition, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+  id: false,
+});
 
 userSchema.pre('save', async function (next) {
   // 'save' works on findByIdAndUpdate --> check if password is updated

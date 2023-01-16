@@ -3,6 +3,11 @@ const express = require('express');
 const {
   getAllUsers,
   getUser,
+  getMe,
+  createNewUser,
+  checkWhoDeleteUser,
+  checkUpdateUserName,
+  updateUserName,
   deleteUser,
 } = require('./../controllers/userController');
 const {
@@ -25,10 +30,17 @@ userRouter.patch('/resetPassword/:email/:token', resetPassword);
 
 userRouter.patch('/updatePassword', protect, updatePassword);
 
-userRouter.route('/').get(getAllUsers);
+userRouter
+  .route('/')
+  .get(protect, restrictTo('admin'), getAllUsers)
+  .post(createNewUser);
+
+userRouter.route('/me').get(protect, getMe);
+
 userRouter
   .route('/:id')
-  .get(getUser)
-  .delete(protect, restrictTo('admin'), deleteUser);
+  .get(protect, restrictTo('admin'), getUser)
+  .patch(protect, checkUpdateUserName, updateUserName)
+  .delete(protect, restrictTo('admin', 'user'), checkWhoDeleteUser, deleteUser);
 
 module.exports = userRouter;

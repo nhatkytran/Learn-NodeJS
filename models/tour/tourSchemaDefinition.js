@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const { requiredMessage } = require('../../utils');
 
 const tourSchemaDefinition = {
@@ -40,6 +42,7 @@ const tourSchemaDefinition = {
     default: 4.5,
     min: [1, 'A ratingsAverage must be more than or equal to 1.0'],
     max: [5, 'A ratingsAverage must be less than or equal to 5.0'],
+    set: value => Math.round(value * 10) / 10,
   },
   ratingsQuantity: {
     type: Number,
@@ -82,6 +85,28 @@ const tourSchemaDefinition = {
     type: Boolean,
     default: false,
   },
+  startLocation: {
+    type: { type: String, default: 'Point', enum: ['Point'] },
+    coordinates: { type: [Number] },
+    address: { type: String },
+    description: { type: String },
+  },
+  locations: [
+    {
+      type: { type: String, default: 'Point', enum: ['Point'] },
+      coordinates: { type: [Number] },
+      address: { type: String },
+      description: { type: String },
+      day: { type: Number },
+    },
+  ],
+  // guides: { type: Array }, // => Embedding
+  guides: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+    },
+  ],
 };
 
 module.exports = tourSchemaDefinition;

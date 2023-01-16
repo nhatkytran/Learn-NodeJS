@@ -1,39 +1,80 @@
+const handlerFactory = require('./handlerFactory');
 const { User } = require('./../models');
 const { catchAsync, AppError } = require('./../utils');
 
-exports.getAllUsers = catchAsync(async (_, res) => {
-  const query = User.find();
-  const users = await query;
+exports.getAllUsers = handlerFactory.getAll({
+  Model: User,
+  dataName: 'users',
+});
 
+exports.getUser = handlerFactory.getOne({
+  Model: User,
+  idParam: 'id',
+  documentName: 'User',
+  dataName: 'user',
+});
+
+exports.getMe = catchAsync(async (req, res) => {
   res.status(200).json({
     status: 'success',
-    results: users.length,
-    data: { users },
+    data: {
+      me: req.user,
+    },
   });
 });
 
-exports.getUser = catchAsync(async (req, res) => {
-  const { id } = req.params;
-  const query = User.findById(id);
-  const user = await query;
+exports.checkUpdateUserName = catchAsync(async (req, _, next) => {
+  const updateUserId = req.params.id;
+  const userId = req.user._id.toString();
 
-  if (!user) return next(new AppError(`User not found with ID: ${id}`));
+  if (updateUserId !== userId)
+    return next(new AppError('You can only update your own name!', 400));
 
-  res.status(200).json({
-    status: 'success',
-    data: { user },
+  if (Object.keys(req.body).length > 1)
+    return next(
+      new AppError(`Route ${req.originalUrl} only updates user's name!`, 400)
+    );
+
+  const { name } = req.body;
+
+  if (!name) return next(new AppError('Please provide field < name >!', 400));
+
+  req.body = { name };
+
+  next();
+});
+
+exports.updateUserName = handlerFactory.updateOne({
+  Model: User,
+  idParam: 'id',
+  documentName: 'User',
+  dataName: 'user',
+});
+
+exports.createNewUser = catchAsync(async (_, res) => {
+  res.status(501).json({
+    status: 'fail',
+    message: 'Please use /signup instead!',
   });
 });
 
-exports.deleteUser = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-  const query = User.findByIdAndDelete(id);
-  const user = await query;
+exports.checkWhoDeleteUser = catchAsync(async (req, _, next) => {
+  const { user } = req;
+  const { role } = user;
 
-  if (!user) return next(new AppError(`User not found with ID: ${id}`));
+  if (role === 'user') {
+    const { id } = req.params;
+    const userId = user._id.toString();
 
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
+    if (id !== userId)
+      return next(new AppError('You can only delete your own account!', 400));
+  }
+
+  next();
+});
+
+exports.deleteUser = handlerFactory.deleteOne({
+  Model: User,
+  idParam: 'id',
+  documentName: 'User',
 });

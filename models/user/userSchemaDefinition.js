@@ -36,8 +36,14 @@ const userSchemaDefinition = {
     default: 'user',
   },
   passwordChangedAt: { type: Date },
-  passwordResetToken: { type: String, select: false },
-  passwordResetExpires: { type: Date, select: false },
+  passwordResetToken: {
+    type: String,
+    select: false,
+  },
+  passwordResetExpires: {
+    type: Date,
+    select: false,
+  },
 };
 
 module.exports = userSchemaDefinition;

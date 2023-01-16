@@ -1,4 +1,4 @@
-const APIFeatures = async (model, requestQuery) => {
+const APIFeatures = async (model, requestQuery, findOptions = {}) => {
   try {
     const queryObject = JSON.parse(
       JSON.stringify(requestQuery).replace(
@@ -9,7 +9,12 @@ const APIFeatures = async (model, requestQuery) => {
 
     const totalDocuments = await model.countDocuments(queryObject);
 
-    return new ClsAPIFeatures(model.find(), queryObject, totalDocuments);
+    return new ClsAPIFeatures(
+      model.find(),
+      queryObject,
+      totalDocuments,
+      findOptions
+    );
   } catch (error) {
     console.error('APIFeatures - Something went wrong!');
     console.error(error);
@@ -17,16 +22,17 @@ const APIFeatures = async (model, requestQuery) => {
 };
 
 class ClsAPIFeatures {
-  constructor(query, queryObject, totalDocuments) {
+  constructor(query, queryObject, totalDocuments, findOptions) {
     this.query = query;
     this.queryObject = queryObject;
     this.totalDocuments = totalDocuments;
+    this.findOptions = findOptions;
   }
 
   _convertCond = cond => cond.split(',').join(' ');
 
   filter() {
-    this.query = this.query.find(this.queryObject);
+    this.query = this.query.find({ ...this.queryObject, ...this.findOptions });
 
     return this;
   }

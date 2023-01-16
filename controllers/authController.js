@@ -47,7 +47,7 @@ exports.protect = catchAsync(async (req, _, next) => {
     return next(new AppError('Please login to get access!', 401));
 
   const token = authorization.split(' ').at(-1);
-  const decoded = await verifyJWT(token);
+  const decoded = await verifyJWT(token); // Time out error and invalid error
 
   const query = User.findById(decoded.id);
   const user = await query;

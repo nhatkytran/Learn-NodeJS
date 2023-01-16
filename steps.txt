@@ -229,3 +229,228 @@ GDPR --> General Data Protection Regulation
   whitelist: ['duration', 'ratingsQuantity', 'ratingsAverage',
   'maxGroupSize', 'difficulty', 'price']
 }));
+
+SECTION - 11
+
+1. Data Modeling
+--> Unstructured data by real world scenario --> Structure --> Logical data model in database
+1.1. Types of relationships
+--> 1 : 1
+--> 1 : Many ( Few | Many | Ton )
+--> Many : Many (Few | Few)
+1.2. Referencing v/s Embedding (Normalization v/s Denormalization)
+1.3. Embed or Reference --> A practical framework
+--> 1. Relationship type (How two datasets are related to each other)
+--> Embed (1 : Few | 1 : Many)
+--> Reference( 1 : Many | 1 : Ton | Many : Many )
+--> 2. Data access patterns (How often data is read or written. Read/Write ratio)
+--> Embed --> High Read/Write ratio
+--> Reference --> Low Read/Write ratio
+--> 3. Data closeness (How 'much' the data is related. How we want to query)
+--> Embed --> Datasets really belong together
+--> Reference --> We frequently need to query datasets on their own
+1.4. Types of Referencing
+--> 1. Child Referencing --> 1 : Few
+--> 2. Parent Referencing --> 1 : Many | 1 : Ton
+--> 3. Two - way Referencing --> Many : Many
+2. Data Model of Natours --> Image in ./study/Section-11
+3. Geospatial Data --> Longitude & Latitude Coordinates describe places on Earth
+--> MongoDB uses special data format called GeoJSON
+--> specify startLocation & locations
+--> GeoJSON --> Longitude --> Latitude
+--> GoogleMap --> Latitude --> Longitude
+--> documents in array (for example in locations) with automatically created _id
+--> see this pattern [{}, {}, {},...] --> Mongoose automatically add _id to objects
+--> import "tours.json"
+4. Modeling Tour Guides --> Embedding v/s Referencing
++++ Embedding +++
+--> guides: { type: Array }
+--> Create: ["id", "id", "id",...]
++++ Referencing +++
+--> [
+  {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User' --> Same name as User model --> mongoose.model('User', schema, colectionName)
+  }
+]
+--> Create: ["id", "id", "id",...]
+5. Populate Tour Guides (Referencing)
+--> getTour --> Tour.findById().populate(< field >);
+populate({
+  path: < field >,
+  select: '-__v -passwordChangedAt'
+  match: { < field >: < value > }
+})
+--> populate --> create new query behind the scene --> performance
+--> .exec() => return a promise
+--> either call next or return a promise in pre & post middleware
+await User.find({ _id: { $in: [id] } });
+--> test with deleted user
+6. reviewModel.js
+Review --> review / rating / createdAt/ ref to tour / ref to user
+--> {
+  type: mongoose.Schema.ObjectId,
+  ref: 'Tour',
+  required: [true, 'Review must belong to a tour!']
+}
+--> Create: "id"
+--> Prepare for virtual properties
+{
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+  id: false
+}
+7. Creating and Getting Reviews
+--> getAllReviews
+--> protect, restrictTo('user'), createNewReview
+--> get userId through protect
+8. Populate Reviews
+--> populate({ path: 'field1 field2' }) --> can not select fields
+--> populate({ path: 'field1' }).populate({ path: 'field2' })
+9. Virtual Populate: Tours and Reviews
+reviews --> parent reference --> tours
+tours don't know about their reviews --> user Virtual Populate to get tours's reviews
+foreign field & local field
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'tour'
+});
+--> Implement Virtual Populate on getOneTour --> .populate('reviews')
+--> create populate chain --> turn off tour populate --> depends on how application works
+
+10. Simple Nested Routes
+POST /tours/:id/reviews --> create review of tour with id and user from login
+--> Implement in tourRoutes
+--> protect --> restrictTo('user') --> createNewReview
+--> get userId from protect --> find tour --> create review
+GET /tours/:id/reviews --> get all reviews of tour with id
+GET /tours/:tourId/reviews/reviewId --> get review with reviewId of tour with tourId
+11. Nested Routes with Express
+router.use(< path >, < route >)
+--> tourRoutes.js --> app.use('/:tourId/reviews', reviewRouter);
+const reviewRouter = express.Router({ mergeParams: true });
+--> Each router has access to the parameters of their specific rotues
+--> { mergeParams: true } --> access to tourId
+/tours/:tourId/reviews v/s /reviews
+--> check req.params.tourId --> not req.params.tourId --> req.body.id
+--> check tour exists
+--> create review for tour
+12. Nested Get Endpoint
+--> Get all reviews {} and all reviews of a tour { tour: tourId }
+
+13. Building Handler Factory Functions --> handlerFactory.js
+--> Factory Function now returns a handler for controller --> put in controller folder
+--> In Factory Function set argument dataName = null --> use dataName ? dataName : Model.modelName;
++++ Delete +++
+--> const deleteOne = Model => handler
+--> Implement on Tours --> Only Admin can delete a tour
+--> Implement on Users --> Admin & User --> checkWhoDeleteUser --> convert id to string to compare
++ Admin can delete every user
++ User can only delete his own account
+--> Implement on Reviews
++ Admin can delete every review
++ User can only delete his own review
++ User of review is deleted problem --> checkWhoDeleteReview \
+--> Check if user exists (in cas admin delete review) --> deleted user --> populate null
++++ Create +++
+--> Create tour --> Only Admin can create new tour
+--> Create user --> Use /signup
+--> Create review --> Only user can create new review
++ Get userId from req.user (protect)
++ Get tourId (/tours/:tourId/reviews or /reviews --> req.body.tour)
++ Create review if user exists
++++ Update +++
+--> Update tour --> Only admin can update a tour
+--> Update user --> Only update user's name
++ User can only update his own name
++ Chack length fields > 1 --> throw error --> only update user's name
++ Check field < name >
+--> Update review
++ User can only update his own review
++ Check if user of that review exists
++ Only update < review > and < rating >
++++ Reading +++
+--> const getOne = (Model, popOptions) => handler
+--> getAll --> create middleware for getAllReviews
++ findOptions = {} in APIFeatures
+--> Can not run find({}) 2 times
+--> Every controller has handlers for CRUD operations
++++ Refactor code - handlerFactoryOptions +++
+
+15. /me --> getMe
+16. Missing Authentication & Authorization
++++ Tours +++
+--> Expose getAllTours
+--> Admin & Lead Guide can createNewTour, updateTour, deleteTour
+--> Admin, Lead Guide & Guide can getMonthlyPlan
++++ Users +++ --> Authorization Bearer token in Postman --> Use Postman to create documentation
+--> Protect Middleware
+--> Implement protect for many routes --> userRouter.use(protect) \
+--> protect all the routes coming after this point
+--> Admin can getAllUsers and getUser
++++ Reviews +++
+--> Protect all review routes
+--> Tour already populate reviews
+--> reviewRouter.use(protect);
+17. Import Review and User data --> users.json & reviews.json
+--> Import/Delete Tours/Users/Reviews at once --> password in users.json
+--> create(data: Array, { validateBeforeSave: false })
+18. Improving Read performance with Indexes
+--> Statistic query --> await query.explain();
+--> tourSchema.index({ price: 1 }); --> index is good for read, but not for create / update
+--> Single Index vs Compound Index
+--> tourSchema.index({ price: 1, ratingsAverage: -1 })
+--> 1 --> Ascending order & -1 --> Descending order
+--> tourSchema.index({ slug: 1 })
+--> delete index on database
+--> When to user indexes --> access pattern (read - write ratio) --> indexes take size and \
+affect create / update / delete
+---> Compound index also affects on single field
+
+19. Calculating Average Rating on Tours
+--> count ratingsAverage & ratingsQuantity on create/update/delete
++++ Review is created +++ --> create --> document middleware
+--> Static method --> schema.statics.method --> call staticmethod on Model --> Model.method()
+--> schema.statics.calcAverageRatings
+--> this.constructor
+--> nRating & avgRating
+--> this.constructor v/s this.model('Review')
+--> aggregate --> _id: '$tour' | null
++++ Review is updated and deleted +++ --> query middleware --> /^findOneAnd/
+--> Need to access review document to get tour id
+--> findByIdAndUpdate, findByIdAndDelete --> shorthand for findOneAndUpdate, findOneAndDelete
+--> in pre --> use this.findOne()
+--> no reviews to run Tour.save() using delete
+--> Math.round((stats[0]?.avgRating || 4.5) * 10) / 10
+20. Preventing Duplicate Reviews
+--> Each user should only review each tour once
+--> Check index - unique field
+--> Use compound index --> reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+--> Round avgRating using feature of Mongoose
+ratingsAverage: {
+  set: value => Math.round(value * 10) / 10;
+}
+
+21. Finding tours within radius
+--> router.route('/tours-within/:distance/center/:latlng/unit/:unit') --> getToursWithin
+--> {{URL}}api/v1/tours/tours-within/400/center/34.111745,-118.113491/unit/mi
+--> startLocation: {
+  $geoWithin: {
+    $centerSphere: [[lng, lat], radius]
+  }
+}
+--> const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+--> tourSchema.index({ startLocation: '2dsphere' }); --> help run $centerSphere faster
+22. Calculating distances
+--> router.route('/distances/:latlng/unit/:unit') --> getDistances
+--> $geoNear --> first stage --> need index for geoField
+--> aggregate([
+  {
+    $geoNear: { key, near, distanceField, distanceMultiplier }
+  }
+])
+
+23. Postman --> Documentation for API
+--> variable for password
+--> add description for folder, endpoints, parameters --> user markdown
