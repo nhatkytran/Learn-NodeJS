@@ -1,38 +1,37 @@
+const AppError = require('./appError');
+
 const APIFeatures = async (model, requestQuery, findOptions = {}) => {
-  try {
-    const queryObject = JSON.parse(
+  // findOptions --> In case get all reviews of a certain tour
+  // findOptions is not defined --> undefined
+  // findOptions gets value undefined --> undefined
+  // findOptions --> {}
+
+  const queryObject = {
+    ...JSON.parse(
       JSON.stringify(requestQuery).replace(
         /\b(gte?|lte?)\b/g,
         match => `$${match}`
       )
-    );
+    ),
+    ...findOptions,
+  };
 
-    const totalDocuments = await model.countDocuments(queryObject);
+  const totalDocuments = await model.countDocuments(queryObject);
 
-    return new ClsAPIFeatures(
-      model.find(),
-      queryObject,
-      totalDocuments,
-      findOptions
-    );
-  } catch (error) {
-    console.error('APIFeatures - Something went wrong!');
-    console.error(error);
-  }
+  return new ClsAPIFeatures(model.find(), queryObject, totalDocuments);
 };
 
 class ClsAPIFeatures {
-  constructor(query, queryObject, totalDocuments, findOptions) {
+  constructor(query, queryObject, totalDocuments) {
     this.query = query;
     this.queryObject = queryObject;
     this.totalDocuments = totalDocuments;
-    this.findOptions = findOptions;
   }
 
   _convertCond = cond => cond.split(',').join(' ');
 
   filter() {
-    this.query = this.query.find({ ...this.queryObject, ...this.findOptions });
+    this.query = this.query.find(this.queryObject);
 
     return this;
   }
@@ -60,16 +59,16 @@ class ClsAPIFeatures {
   paginate() {
     const page = Number(this.queryObject.page) || 1;
     const limit = Number(this.queryObject.limit) || 100;
-    // if "page" or "limit" is equal to 0 => convert to 1, 100
+    // if "page", "limit" is equal to 0 => convert to 1, 100
 
     if (page < 0 || limit < 0)
-      throw new Error('"page" and "limit" must not be negative!');
+      throw new AppError('"page" and "limit" must be positive!', 400);
     if (!Number.isInteger(page) | !Number.isInteger(limit))
-      throw new Error('"page" and "limit" must be an integer!');
+      throw new AppError('"page" and "limit" must be an integer!', 400);
 
     const pages = Math.ceil(this.totalDocuments / limit);
 
-    if (page > pages && pages) throw new Error('Page not found!');
+    if (page > pages && pages) throw new AppError('Page not found!', 404);
 
     const skip = (page - 1) * limit;
 

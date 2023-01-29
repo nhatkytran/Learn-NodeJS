@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const validator = require('validator');
 
 const { User } = require('./../models');
@@ -6,6 +5,7 @@ const {
   AppError,
   catchAsync,
   createSendToken,
+  cryptoHash,
   verifyJWT,
   sendEmail,
 } = require('./../utils');
@@ -24,18 +24,18 @@ exports.signup = catchAsync(async (req, res) => {
   await createSendToken(user._id, 201, res);
 });
 
-exports.login = catchAsync(async (req, res, next) => {
+exports.login = catchAsync(async (req, res) => {
   const email = req.body.email;
   const password = String(req.body.password);
 
   if (!email || !password)
-    return next(new AppError('Please provide email and password!', 400));
+    throw new AppError('Please provide email and password!', 400);
 
   const query = User.findOne({ email }).select('+password');
   const user = await query;
 
   if (!user || !(await user.correctPassword(password)))
-    return next(new AppError('Incorrect email or password!', 401));
+    throw new AppError('Incorrect email or password!', 401);
 
   await createSendToken(user._id, 200, res);
 });
@@ -44,7 +44,7 @@ exports.protect = catchAsync(async (req, _, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer'))
-    return next(new AppError('Please login to get access!', 401));
+    throw new AppError('Please login to get access!', 401);
 
   const token = authorization.split(' ').at(-1);
   const decoded = await verifyJWT(token); // Time out error and invalid error
@@ -53,13 +53,15 @@ exports.protect = catchAsync(async (req, _, next) => {
   const user = await query;
 
   if (!user)
-    return next(
-      new AppError('The user belongs to this token does not longer exist!', 401)
+    throw new AppError(
+      'The user belongs to this token does not longer exist!',
+      401
     );
 
   if (user.changedPassword(decoded.iat))
-    return next(
-      new AppError('User recently changed password! Please login again.', 401)
+    throw new AppError(
+      'User recently changed password! Please login again.',
+      401
     );
 
   req.user = user;
@@ -72,27 +74,28 @@ exports.restrictTo = function (...roles) {
     const user = req.user;
 
     if (!roles.includes(user.role))
-      return next(
-        new AppError("You don't have permission to perform this action!", 403)
+      throw new AppError(
+        "You don't have permission to perform this action!",
+        403
       );
 
     next();
   };
 };
 
-exports.forgotPassword = catchAsync(async (req, res, next) => {
+exports.forgotPassword = catchAsync(async (req, res) => {
   const { email } = req.body;
 
-  if (!email) return next(new AppError('Please provide an email!', 400));
+  if (!email) throw new AppError('Please provide an email!', 400);
   if (!validator.isEmail(email))
-    return next(new AppError('Please provide a valid email!', 400));
+    throw new AppError('Please provide a valid email!', 400);
 
   const query = User.findOne({ email });
   const user = await query;
 
-  if (!user) return next(new AppError(`User not found with email: ${email}`));
+  if (!user) throw new AppError(`User not found with email: ${email}`);
 
-  const resetToken = user.createPasswordResetToken();
+  const resetToken = await user.createPasswordResetToken();
 
   await user.save({ validateModifiedOnly: true });
 
@@ -110,8 +113,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
     await user.save({ validateModifiedOnly: true });
 
-    return next(
-      new AppError('Something went wrong sending email! Please try again.', 500)
+    throw new AppError(
+      'Something went wrong sending email! Please try again.',
+      500
     );
   }
 
@@ -124,9 +128,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.resetPassword = catchAsync(async (req, res, next) => {
+exports.resetPassword = catchAsync(async (req, res) => {
   const { email, token } = req.params;
-  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const hashedToken = await cryptoHash(token);
 
   const query = User.findOne({
     email,
@@ -136,20 +140,16 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   const user = await query;
 
   if (!user)
-    return next(
-      new AppError('Invalid email - token or token has expired!', 401)
-    );
+    throw new AppError('Invalid email - token or token has expired!', 401);
 
   const { password, passwordConfirm } = req.body;
 
   if (!password || !passwordConfirm)
-    return next(
-      new AppError('Please provide password and passwordConfirm!', 400)
-    );
+    throw new AppError('Please provide password and passwordConfirm!', 400);
 
   // 3. Reset password
-  user.password = password;
-  user.passwordConfirm = passwordConfirm;
+  user.password = String(password);
+  user.passwordConfirm = String(passwordConfirm);
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
 
@@ -158,27 +158,23 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await createSendToken(user._id, 200, res);
 });
 
-exports.updatePassword = catchAsync(async (req, res, next) => {
+exports.updatePassword = catchAsync(async (req, res) => {
   const query = User.findById(req.user._id).select('+password');
   const user = await query;
 
-  const oldPassword = String(req.body.oldPassword);
-  const password = String(req.body.password);
-  const passwordConfirm = String(req.body.passwordConfirm);
+  const { oldPassword, password, passwordConfirm } = req.body;
 
   if (!oldPassword || !password || !passwordConfirm)
-    return next(
-      new AppError(
-        'Please provide oldPassword, password and passwordConfirm',
-        400
-      )
+    throw new AppError(
+      'Please provide oldPassword, password and passwordConfirm',
+      400
     );
 
-  if (!(await user.correctPassword(oldPassword)))
-    return next(new AppError('Incorrect oldPassword! Please try again.', 401));
+  if (!(await user.correctPassword(String(oldPassword))))
+    throw new AppError('Incorrect oldPassword! Please try again.', 401);
 
-  user.password = password;
-  user.passwordConfirm = passwordConfirm;
+  user.password = String(password);
+  user.passwordConfirm = String(passwordConfirm);
 
   await user.save({ validateModifiedOnly: true });
 

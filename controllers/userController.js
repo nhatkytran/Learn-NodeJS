@@ -23,23 +23,23 @@ exports.getMe = catchAsync(async (req, res) => {
   });
 });
 
-exports.checkUpdateUserName = catchAsync(async (req, _, next) => {
-  const updateUserId = req.params.id;
-  const userId = req.user._id.toString();
+exports.createNewUser = catchAsync(async (_, res) =>
+  res.status(501).json({
+    status: 'fail',
+    message: 'Please use /signup instead!',
+  })
+);
 
-  if (updateUserId !== userId)
-    return next(new AppError('You can only update your own name!', 400));
+exports.checkUpdateUserName = catchAsync(async (req, _, next) => {
+  if (req.params.id !== String(req.user._id))
+    throw new AppError('You can only update your own name!', 400);
 
   if (Object.keys(req.body).length > 1)
-    return next(
-      new AppError(`Route ${req.originalUrl} only updates user's name!`, 400)
+    throw new AppError(
+      `Route ${req.originalUrl} only used for updating user's name!`,
+      400
     );
-
-  const { name } = req.body;
-
-  if (!name) return next(new AppError('Please provide field < name >!', 400));
-
-  req.body = { name };
+  if (!req.body.name) throw new AppError('Please provide field < name >!', 400);
 
   next();
 });
@@ -51,24 +51,12 @@ exports.updateUserName = handlerFactory.updateOne({
   dataName: 'user',
 });
 
-exports.createNewUser = catchAsync(async (_, res) => {
-  res.status(501).json({
-    status: 'fail',
-    message: 'Please use /signup instead!',
-  });
-});
-
 exports.checkWhoDeleteUser = catchAsync(async (req, _, next) => {
   const { user } = req;
   const { role } = user;
 
-  if (role === 'user') {
-    const { id } = req.params;
-    const userId = user._id.toString();
-
-    if (id !== userId)
-      return next(new AppError('You can only delete your own account!', 400));
-  }
+  if (role === 'user' && req.params.id !== String(user._id))
+    throw new AppError('You can only delete your own account!', 400);
 
   next();
 });

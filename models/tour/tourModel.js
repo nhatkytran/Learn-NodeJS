@@ -52,10 +52,6 @@ tourSchema.pre('save', function (next) {
 //   next();
 // });
 
-// tourSchema.post('save', function (docs, next) {
-//   next();
-// });
-
 tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
   this.start = Date.now();
@@ -66,7 +62,7 @@ tourSchema.pre(/^find/, function (next) {
 tourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',
-    select: '-__v -password',
+    select: '-__v -password -passwordChangedAt',
   });
 
   next();

@@ -11,17 +11,17 @@ const reviewSchema = new mongoose.Schema(reviewSchemaDefinition, {
 
 // --- Indexes ---
 
+// Each user should only review a certain tour once
 reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
 
 // --- Static methods ---
 
 reviewSchema.statics.calcAverageRatings = async function (tourId) {
   const stats = await this.aggregate([
-    {
-      $match: { tour: tourId },
-    },
+    { $match: { tour: tourId } },
     {
       $group: {
+        // _id: null --> Group All
         _id: '$tour',
         nRating: { $sum: 1 },
         avgRating: { $avg: '$rating' },

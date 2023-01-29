@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 
 const userSchemaDefinition = require('./userSchemaDefinition');
-const { bcryptHash, bcryptCompare } = require('./../../utils');
+const { bcryptHash, bcryptCompare, cryptoHash } = require('./../../utils');
 
 const userSchema = new mongoose.Schema(userSchemaDefinition, {
   toJSON: { virtuals: true },
@@ -38,14 +38,11 @@ userSchema.methods.changedPassword = function (tokenTimestamp) {
   return false;
 };
 
-userSchema.methods.createPasswordResetToken = function () {
+userSchema.methods.createPasswordResetToken = async function () {
   const resetToken = crypto.randomBytes(64).toString('hex');
   const expireTimestamp = Date.now() + 10 * 60 * 1000;
 
-  this.passwordResetToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
+  this.passwordResetToken = await cryptoHash(resetToken);
   this.passwordResetExpires = expireTimestamp;
 
   return resetToken;

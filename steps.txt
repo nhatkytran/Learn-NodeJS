@@ -2,21 +2,33 @@ SECTION - 6
 
 1. app.js
 2. npm install express
+--> Express is a minimal NodeJS framework, a higher level of abstraction
 3. npm install nodemon --save-dev
-4. "start": "nodemon app.js --inspect"
-5. Handle POST - req.body (app.use(express.json() and app.use(express.urlencoded({ extended: true }))))
+--> "start": "nodemon app.js --inspect"
+4. Basic Routing
+--> API and The REST Architecture
+--> URL and ENDPOINT
+5. Handle POST - req.body --> body parser
+--> app.use(express.json())
+--> app.use(express.urlencoded({ extended: true }))
 6. npm install morgan --> app.use(morgan('dev'))
 7. Mount router
 - app.get(< path >, callback)
 - app.route(< path >).get(callback)
 - app.use(< path >, router)
 --> router.route(< sub - path>).get(callback)
-8. app.js, server.js, controllers (tourController.js), routes (tourRoutes.js)
+--> app.js, server.js, controllers (tourController.js), routes (tourRoutes.js)
+8. Request-Response Cycle and Middleware Stack
+--> The essence of Express development is to understand \
+the Request-Response Cycle and Middleware Stack
+
+Incoming Request --> Middleware Stack --> Response
+
 9. Use param middleware for validation
 10. Chaining multiple middleware functions
 11. Serving static files: app.use(express.static(< path >))
 12. Environment variables: process.env
---> NODE_ENV=development nodemon server.js --inspect
+--> NODE_ENV=development nodemon --inspect server.js
 --> Use config.env
 npm install dotenv
 dotenv.config({ path: < path > })
@@ -27,6 +39,12 @@ SECTION - 8
 1. Connect database with the Express Application
 npm install mongoose
 --> Mongoose --> ODM --> Object Data Modeling
+--> Mongoose is an Object Data Modeling (ODM) library for MongoDB and NodeJS, \
+a higher level of abstraction
+--> Mongoose Schema: Where we model our data, by describing the structure \
+of the data, default values, and validation
+--> Mongoose Model: A wrapper for the Schema, providing an interface \
+to the database for CRUD operations
 --> Configuration: Database's password <PASSWORD>, Database's name
 Options: { useNewUrlParser: true, useUnifiedTopology: true }
 2. Create Schema and Model
@@ -104,8 +122,10 @@ SECTION - 9
 1. Unhandled Routes
 app.all('*', callback) --> status: fail
 2. Global Error Handling Middleware --> Seaparation of Concerns --> status: error
---> Operational Errors (Exceptions)
---> Programming Errors
+--> Error <--> Exception
+--> Operational Errors --> Logic, User,...
+--> Programming Errors --> Syntax Error,...
+--> Rejection --> Connect to Database fails
 --> app.use((error, req, res, next) --> 4 arguments --> Express knows that this is Gloabl Error Handling Middleware)
 --> next(< error >) --> Global Error Handling Middleware
 3. Custom Errors
@@ -186,7 +206,7 @@ protect --> restrictTo --> main route (restrictTo('admin', 'lead-guide'))
 --> update passwordChangedAt --> this.isModified(< field >) & this.isNew
 --> send jwt
 9. Update user password
---> user 'save' instead of 'findByIdAndUpdate' case 'findByIdAndUpdate' has some quirk with validation
+--> user 'save' instead of 'findByIdAndUpdate' cause 'findByIdAndUpdate' has some quirk with validation
 --> createSendToken
 10. Update user's data --> updateMe --> use findByIdAndUpdate --> use filterObject
 11. Delete user
@@ -213,7 +233,7 @@ GDPR --> General Data Protection Regulation
 --> Limit data from body --> app.use(express.json({ limit: '10kb' }));
 --> CORS --> Whho can use API
 12.4 Data sanitization
---> Defend against NoSQL Query Injection --> npm install mongo-express-sanitize --> mongoSanitize
+--> Defend against NoSQL Query Injection --> npm install express-mongo-sanitize --> mongoSanitize
 --> "email": { "$gt": "" }
 --> Defend against Cross - Site Scripting --> npm install xss-clean --> xss
 --> "name": "<div></div>"
@@ -259,13 +279,14 @@ SECTION - 11
 --> specify startLocation & locations
 --> GeoJSON --> Longitude --> Latitude
 --> GoogleMap --> Latitude --> Longitude
---> documents in array (for example in locations) with automatically created _id
+--> documents in array (for example in locations) Mongoose automatically created _id
 --> see this pattern [{}, {}, {},...] --> Mongoose automatically add _id to objects
 --> import "tours.json"
 4. Modeling Tour Guides --> Embedding v/s Referencing
 +++ Embedding +++
 --> guides: { type: Array }
 --> Create: ["id", "id", "id",...]
+--> Case: Don't specify tour's guides
 +++ Referencing +++
 --> [
   {
@@ -285,7 +306,8 @@ populate({
 --> .exec() => return a promise
 --> either call next or return a promise in pre & post middleware
 await User.find({ _id: { $in: [id] } });
---> test with deleted user
+--> test with deleted user --> []
+
 6. reviewModel.js
 Review --> review / rating / createdAt/ ref to tour / ref to user
 --> {
@@ -318,9 +340,10 @@ tourSchema.virtual('reviews', {
 });
 --> Implement Virtual Populate on getOneTour --> .populate('reviews')
 --> create populate chain --> turn off tour populate --> depends on how application works
+--> populate on middleware and populate on main query at the same time
 
 10. Simple Nested Routes
-POST /tours/:id/reviews --> create review of tour with id and user from login
+POST /tours/:id/reviews --> create review of tour with user from login
 --> Implement in tourRoutes
 --> protect --> restrictTo('user') --> createNewReview
 --> get userId from protect --> find tour --> create review
@@ -342,6 +365,7 @@ const reviewRouter = express.Router({ mergeParams: true });
 13. Building Handler Factory Functions --> handlerFactory.js
 --> Factory Function now returns a handler for controller --> put in controller folder
 --> In Factory Function set argument dataName = null --> use dataName ? dataName : Model.modelName;
+
 +++ Delete +++
 --> const deleteOne = Model => handler
 --> Implement on Tours --> Only Admin can delete a tour
@@ -352,31 +376,32 @@ const reviewRouter = express.Router({ mergeParams: true });
 + Admin can delete every review
 + User can only delete his own review
 + User of review is deleted problem --> checkWhoDeleteReview \
---> Check if user exists (in cas admin delete review) --> deleted user --> populate null
+--> Check if user exists (in case admin delete review) --> deleted user --> populate null
+
 +++ Create +++
 --> Create tour --> Only Admin can create new tour
---> Create user --> Use /signup
+--> Create user --> Use /signup --> 501 --> Not Implemented
 --> Create review --> Only user can create new review
 + Get userId from req.user (protect)
 + Get tourId (/tours/:tourId/reviews or /reviews --> req.body.tour)
-+ Create review if user exists
+
 +++ Update +++
 --> Update tour --> Only admin can update a tour
 --> Update user --> Only update user's name
 + User can only update his own name
-+ Chack length fields > 1 --> throw error --> only update user's name
++ Check length fields > 1 --> throw error --> only update user's name
 + Check field < name >
 --> Update review
 + User can only update his own review
 + Check if user of that review exists
 + Only update < review > and < rating >
+
 +++ Reading +++
 --> const getOne = (Model, popOptions) => handler
 --> getAll --> create middleware for getAllReviews
 + findOptions = {} in APIFeatures
 --> Can not run find({}) 2 times
 --> Every controller has handlers for CRUD operations
-+++ Refactor code - handlerFactoryOptions +++
 
 15. /me --> getMe
 16. Missing Authentication & Authorization
@@ -410,6 +435,7 @@ affect create / update / delete
 
 19. Calculating Average Rating on Tours
 --> count ratingsAverage & ratingsQuantity on create/update/delete
+
 +++ Review is created +++ --> create --> document middleware
 --> Static method --> schema.statics.method --> call staticmethod on Model --> Model.method()
 --> schema.statics.calcAverageRatings
@@ -417,14 +443,16 @@ affect create / update / delete
 --> nRating & avgRating
 --> this.constructor v/s this.model('Review')
 --> aggregate --> _id: '$tour' | null
+
 +++ Review is updated and deleted +++ --> query middleware --> /^findOneAnd/
 --> Need to access review document to get tour id
 --> findByIdAndUpdate, findByIdAndDelete --> shorthand for findOneAndUpdate, findOneAndDelete
 --> in pre --> use this.findOne()
 --> no reviews to run Tour.save() using delete
 --> Math.round((stats[0]?.avgRating || 4.5) * 10) / 10
+
 20. Preventing Duplicate Reviews
---> Each user should only review each tour once
+--> Each user should only review a certain tour once
 --> Check index - unique field
 --> Use compound index --> reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
 --> Round avgRating using feature of Mongoose

@@ -4,6 +4,7 @@ exports.bcryptCompare = require('./bcryptCompare');
 exports.bcryptHash = require('./bryptHash');
 exports.catchAsync = require('./catchAsync');
 exports.createSendToken = require('./createSendToken');
+exports.cryptoHash = require('./cryptoHash');
 exports.requiredMessage = require('./requiredMessage');
 exports.signJWT = require('./signJWT');
 exports.verifyJWT = require('./verifyJWT');

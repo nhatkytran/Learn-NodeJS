@@ -65,20 +65,17 @@ exports.getMonthlyPlan = catchAsync(async (req, res) => {
   });
 });
 
-exports.getToursWithin = catchAsync(async (req, res, next) => {
+exports.getToursWithin = catchAsync(async (req, res) => {
   const { distance, latlng, unit } = req.params;
   const [lat, lng] = latlng.split(',').map(Number);
 
   if (!lat || !lng)
-    return next(
-      AppError(
-        'Please provide latitude and longitude in the right format!',
-        400
-      )
+    throw new AppError(
+      'Please provide latitude and longitude in the right format!',
+      400
     );
 
   const radius = Number(distance) / (unit === 'mi' ? 3963.2 : 6378.1);
-
   const query = Tour.find({
     startLocation: {
       $geoWithin: {
@@ -95,20 +92,17 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getDistances = catchAsync(async (req, res, next) => {
+exports.getDistances = catchAsync(async (req, res) => {
   const { latlng, unit } = req.params;
   const [lat, lng] = latlng.split(',').map(Number);
 
   if (!lat || !lng)
-    return next(
-      AppError(
-        'Please provide latitude and longitude in the right format!',
-        400
-      )
+    throw new AppError(
+      'Please provide latitude and longitude in the right format!',
+      400
     );
 
   const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
-
   const query = Tour.aggregate([
     {
       $geoNear: {

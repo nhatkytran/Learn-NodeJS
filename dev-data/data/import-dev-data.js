@@ -9,26 +9,20 @@ dotenv.config({ path: path.join(__dirname, '..', '..', 'config.env') });
 
 const { DATABASE, DATABASE_NAME, DATABASE_PASSWORD } = process.env;
 
-const tours = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'tours.json'), 'utf-8')
-);
-const users = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'users.json'), 'utf-8')
-);
-const reviews = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'reviews.json'), 'utf-8')
-);
+const getData = fileName =>
+  JSON.parse(fs.readFileSync(path.join(__dirname, fileName), 'utf-8'));
 
-const DB = DATABASE.replace('<NAME>', DATABASE_NAME).replace(
-  '<PASSWORD>',
-  DATABASE_PASSWORD
-);
+const tours = getData('tours.json');
+const users = getData('users.json');
+const reviews = getData('reviews.json');
 
 const importData = async () => {
   try {
-    await Tour.create(tours, { validateBeforeSave: false });
-    await User.create(users, { validateBeforeSave: false });
-    await Review.create(reviews, { validateBeforeSave: false });
+    await Promise.all([
+      Tour.create(tours, { validateBeforeSave: false }).exec(),
+      User.create(users, { validateBeforeSave: false }).exec(),
+      Review.create(reviews, { validateBeforeSave: false }).exec(),
+    ]);
 
     console.log('Data import - Successful!');
   } catch (error) {
@@ -41,9 +35,11 @@ const importData = async () => {
 
 const deleteData = async () => {
   try {
-    await Tour.deleteMany();
-    await User.deleteMany();
-    await Review.deleteMany();
+    await Promise.all([
+      Tour.deleteMany().exec(),
+      User.deleteMany().exec(),
+      Review.deleteMany().exec(),
+    ]);
 
     console.log('Data delete - Successful!');
   } catch (error) {
@@ -53,6 +49,11 @@ const deleteData = async () => {
     process.exit();
   }
 };
+
+const DB = DATABASE.replace('<NAME>', DATABASE_NAME).replace(
+  '<PASSWORD>',
+  DATABASE_PASSWORD
+);
 
 mongoose.set('strictQuery', true);
 mongoose

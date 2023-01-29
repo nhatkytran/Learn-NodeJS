@@ -1,14 +1,19 @@
 const { AppError, APIFeatures, catchAsync } = require('./../utils');
 
+const { NODE_ENV } = process.env;
+
 exports.getAll = ({ Model, dataName }) =>
   catchAsync(async (req, res) => {
-    console.log(req.query);
+    if (NODE_ENV === 'development') {
+      console.log('req.query:', req.query);
+      console.log('req.filter:', req.filterOptions);
+    }
 
-    const features = await APIFeatures(Model, req.query, req.filter || {});
+    const features = await APIFeatures(Model, req.query, req.filterOptions);
 
     features.filter().sort().project().paginate();
 
-    const documents = await features.query.explain();
+    const documents = await features.query;
 
     res.status(200).json({
       status: 'success',
@@ -24,15 +29,13 @@ exports.getOne = ({
   dataName,
   populateOptions,
 }) =>
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     const id = req.params[idParam];
-    const query = Model.findById(id).populate(populateOptions).explain();
+    const query = Model.findById(id).populate(populateOptions);
     const document = await query;
 
     if (!document)
-      return next(
-        new AppError(`${documentName} not found with ID: ${id}`, 404)
-      );
+      throw new AppError(`${documentName} not found with ID: ${id}!`, 404);
 
     res.status(200).json({ status: 'success', data: { [dataName]: document } });
   });
@@ -46,7 +49,7 @@ exports.createOne = ({ Model, dataName }) =>
   });
 
 exports.updateOne = ({ Model, idParam, documentName, dataName }) =>
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     const id = req.params[idParam];
     const query = Model.findByIdAndUpdate(id, req.body, {
       new: true,
@@ -55,23 +58,19 @@ exports.updateOne = ({ Model, idParam, documentName, dataName }) =>
     const document = await query;
 
     if (!document)
-      return next(
-        new AppError(`${documentName} not found with ID: ${id}`, 404)
-      );
+      throw new AppError(`${documentName} not found with ID: ${id}!`, 404);
 
     res.status(200).json({ status: 'success', data: { [dataName]: document } });
   });
 
 exports.deleteOne = ({ Model, idParam, documentName }) =>
-  catchAsync(async (req, res, next) => {
+  catchAsync(async (req, res) => {
     const id = req.params[idParam];
     const query = Model.findByIdAndDelete(id);
     const document = await query;
 
     if (!document)
-      return next(
-        new AppError(`${documentName} not found with ID: ${tourId}`, 404)
-      );
+      throw new AppError(`${documentName} not found with ID: ${id}!`, 404);
 
     res.status(204).json({ status: 'success', data: null });
   });
