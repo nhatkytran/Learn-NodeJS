@@ -1,4 +1,4 @@
-SECTION - 6
+SECTION - 6 --> Start Building API
 
 1. app.js
 2. npm install express
@@ -482,3 +482,559 @@ ratingsAverage: {
 23. Postman --> Documentation for API
 --> variable for password
 --> add description for folder, endpoints, parameters --> user markdown
+
+--- Reinforce knowledge before moving on
+
+1. Front-end v/s Back-end
+--> Back-end
++ Static Website
++ Dynamic Website
++ API Website
+
+--> How the Web works?
+
+2. The Event - Driven Architecture
+
+Emitter -- [Emit events] --> Listener -- [Calls] --> Attached callback function
+[         Observer pattern           ]
+
+3.1. The CommonJS Module System
+
+--> Each Javascript file is treated as a separate module
+--> NodeJS uses CommonJS Module System: require(), exports, module.exports
+--> ES Module System (EcmaScript Module System) is used in browsers: import/export
+--> There have been attempts to bring ES modules to NodeJS (.mjs)
+
+3.2. Require() a module
+
+Resolving & Loading --> Wrapping --> Execution --> Returning Exports --> Caching
+
+--> Resolving & Loading (Core modules / Developer modules / 3rd-party modules - NPM)
+--> Path resolving
+1. Start with Core modules
+2. If begins with './' or '../' --> Try to load Developer modules
+3. If no file found --> Try to find folder with index.js in it
+4. Else --> Go to node_modules/ and try to find module there
+
+--> Wrapping
+(function (exports, require, module, __filename, __dirname) {
+  // Module code lives here
+});
+
+--> Execution
+
+--> Returning Exports
+--> require function returns exports of the required module
+
+--> Caching
+
+4. NodeJS --> V8 Engine --> libuv (event loop & thread pool - threads)
+
+--> A process --> A program in execution
+--> Node Process --> First off, when we use Node on a computer, \
+it means that there is a Node process running on that computer
+
+--> NodeJS (Single Thread) \
+--> Initialize program \
+--> Execute "top-level" code \
+--> Require moduels \
+--> Register event callbacks \
+--> Event Loop
+
+5. NodeJS Event Loop
+
+--> Callback queues
+1. Expired timer callbacks --> Timer queue
+2. I/O polling and callbacks --> IO queue
+--- I/O Polling
+3. setImmediate callbacks --> Check queue
+4. Close callbacks (Server or Web Socket shuts down) --> Close queue
+
+--> Check Microtask Queue after every callback
+
+--> Microtask queues
+1. process.nextTick() queue
+2. Other microtasks queue (Resoleved promises)
+
+---
+
+SECTION - 12 --> Server-Side Rendering
+
+1. Setting up Template Engine in Express --> Setting up Pug in Express
+
+1.1. Tell Express which Template Engine we want to use
+--> Template Engine --> allow us to create a template and then easily \
+fill up that template with our data
+--> npm install pug
+--> app.set('view engine', 'pug');
+--> Express automatically supports the most common engines out of the box
+1.2. Define where these files are actually located in our file system
+--> Pug templates are actually called views in Express --> create views folder
+--> app.set('views', path.join(__dirname, 'views'))
+--> create file in views --> < name >.pug
+1.3. Define a route
+--> res.status.render(< name >);
+--> 304 --> Not Modified
+
+2. First Steps with Pug
+
+--> What is Pug?
+--> In essence, Pug is a simple whitespace sensitive syntax for writing HTML, \
+so that really the gist of what it is
+--> Writing HTML using their name and indentation
+
+--> link favicon --> img/favicon.png
+--> link css file --> css/style.css
+--> attributes
+--> style.css file actually get loaded from the css folder automatically \
+because each asset actually triggers its own HTTP requests
+--> Handled by app.use(express.static(< path >))
+
+--> Pass data into a Pug template
+--> res.status(200).render(< name >, < options >);
+--> Variables are passed into a Pug template called locals
+--> options = { tour: 'The Park Camper', user: 'Jonas' }
+
+--> 3 ways of writing code in a Pug template
+
+--> 1. Buffered Code
+--> h1= tour --> buffered code
+--> write simple code in buffered code --> h2= user.toUppercase()
+
+--> 2. Unbuffered Code --> Not going to add anything to the output
+--> Syntax of Unbuffered Code: - const x = 9;
+- const x = 9;
+h2= 2 * x
+
+--> 3. Interpolation
+--> Looks like Template String in ES6
+--> Natours | #{tour} --> Natours | The Forest Hiker
+
+--> create comments in Pug template \
+// --> HTML comment
+//- --> Pug comment
+
+--> https://html2pug.vercel.app/ --> Use this site to convert HTML to Pug
+--> https://html-to-pug.com/
+
+3. Create Base Template
+
+--> Base template
+--> The template upon which all other templates will be based on later
+
+--> BEM --> Block__Element--Modifier
+--> div --> the standard block element in HTML --> .
+
+--> Convert HTML to Pug template
+
+--> HEADER
+--> Don't use form at this point
+--> Commnent out nav user
+
+--> CONTENT
+--> Just create a Skeleton at this point
+section.overview
+  h1 = tour
+
+--> FOOTER
+--> li: a(href='#') Link --> Works just find as long as \
+there is no new line with indentation
+| --> line continue
+--> cta --> call to action
+
+4. Include Files into Pug Template
+
+--> Include one template into another template
+--> Good practice --> Prefix these files that only serve \
+for being included with an underscore
+--> _header.pug --> _footer.pug
+--> base.pug --> include _header --> include _footer
+
+5. Extend Base Template with Blocks
+
+--> extends --> use the same base layout for every single page
+--> overview.pug --> tour.pug
+--> app.get('overview', (req, res) => {
+  res.status(200).render('overview', {
+    title: 'All Tours'
+  });
+});
+--> app.get('tour', (req, res) => {
+  res.status(200).render('tour', {
+    title: 'The Forest Hiker'
+  });
+});
+
+--> Inject the content into the base template (the parent template) \
+--> This process is then called extending
+--> So whenever the overview template is rendered, we then take \
+the base template and fill it up with the content of this file, \
+--> so we extend it
+
+--> base.pug
+block content
+  h1 This is a placeholder heading
+--> overview.pug
+---
+extends base
+
+block content
+  h1 This is the tour overview
+--
+--> Can only extend one base but have many blocks
+--> With extends, now we can use different routes like 'overview' and 'tour' \
+and still have the code in 'base' route
+
+file extends --> base file --> base included
+
+6. Setting up the Project Structure --> MVC for views
+
+7. Building the Tour Overview
+
+--> 1. Getting tour data from collection
+--> 2. Render
+{ title: 'All Tours', tours }
+--> each tour in tours --> builtin loop in Pug
+--> main.main
+---
+tour.name (2) --> template string v/s interpolation
+tour.imageCover
+--> .card__details
+`${tour.difficulty} ${tour.duration}-day tour`
+tour.summary
+tour.startLocation.description
+tour.startDates[0].toLocaleString('en-us', {
+  month: 'long', year: 'numeric'
+})
+`${tour.locations.length} stops`
+`${tour.maxGroupSize} people`
+`$${tour.price}`
+`${tour.ratingsAverage}`
+`rating (${tour.ratingsQuantity})`
+`/tours/${tour.slug}` --> relative URL
+| --> empty piped lane
+
+8. Building the Tour Page
+
+--> get tour using :slug
+--> populate({
+  path: 'reviews',
+  select: 'review rating user'
+})
+--> Fix load CSS file, images,...
+
+--> Build template
+
+--> Header section
+`/tours/img/${tour.imageCover}`
+tour.name (2)
+tour.duration
+tour.startLocation.description
+--> mixin headingBox(text, icon)
+
+--> Description section
+--> mixins --> basically reusable pieces of code
+--> preprocessor --> In computer science, a preprocessor (or precompiler) \
+is a program that processes its input data to produce output \
+that is used as input in another program
+---
+mixin overviewBox(label, text, icon)
+---
+--> test include mixin
+- const date = tour.startDates[0].toLocaleString('en-us', {
+  month: 'long',
+  year: 'numeric'
+})
+tour.difficulty
+tour.maxGroupSize
+tour.ratingsAverage / tour.ratingsQuantity
+
+each guide in tour.guides
+guide.name (2)
+`img/users/${guide.photo}`
+guide.role
+- if (guide.role === 'lead-guide')
+  span Lead guide
+- if (guide.role === 'guide')
+  span Tour guide
+
+`About ${tour.name} tour`
+- const paragraphs = tour.description.split('\n')
+each p in paragraphs
+  p.description__text= p
+
+--> Images section
+each img, i in tour.images
+`/img/tours/${img}`, `${tour.name} Tour ${i + 1}`
+class=`picture-box__img--${i + 1}` --> test #{}
+
+--> Reviews section
+each review in tour.reviews
+  +reviewCard(review)
+mixin reviewCard(review)
+review.user.name (2)
+`/img/users/${review.user.photo}`
+review.review
+--> fix All Tours link
+each star in [1, 2, 3, 4, 5]
+  `${review.rating >= star ? 'active' : 'inactive'}`
+
+--> Call to Action section
+`img/tours/${tour.images[1]}` alt='Picture tour'
+tour.duration
+
+9. Including a Map with Mapbox
+
+--> Fix title of Website
+--> { title: `${tour.name} Tour` }
+
+--> Library Mapbox --> runs in the front-end
+
+9.1 JS file
+
+---
+block head
+block append head
+  script(defer, src='/js/mapbox.js')
+---
+--> Add at the end of the block
+
+--> Instead of calling API again in JS file
+--> #map --> data-locations=`${JSON.stringify(tour.locations)}`
+--> Get locations in JS file
+--> Run JS file with async, defer or using DOMContentLoaded
+
+9.2 Mapbox
+
+--> SDK --> Software Development Kit
+--> A software development kit (SDK) is a set of tools \
+provided by the manufacturer of (usually) a hardware platform, \
+operating system (OS), or programming language
+
+--> Create account
+--> SDK --> JS Web --> CDN --> Link
+--> npm i helmet@3.23.3 --> Cannot load mapboxgl
+
+--> Create token --> Include token
+--> Desplay default Map
+
+--> Design in Mapbox Studio
+--> Use Style URL
+
+--> GPS --> Global Positioning System
+
+--> Create Marker --> Add Marker --> Add Popup \
+--> Extend map bound to include current location
+--> Style --> Padding
+
+--> Create Popup of Marker
+
+10. Building the Login Screen
+
+--> 'Log into your account'
+--> Create link to '/login'
+
+11. Loggin in Users with API
+
+11.1. Login and get cookie
+--> HTTP Request or AJAX
+--> /js/login.js
+--> axios --> error.response.data
+--> Cookies
+--> The browser sends the cookie along with every new request
+--> Back-end
+--> In order to get access to the cookies that are in request
+--> npm install cookie-parser
+--> app.use(cookieParser())
+--> req.cookies
+--> add using cookie to protect
+
+11.2. Middleware checks if use logged in
+--> Server-side Rendering --> Reload on each request --> Using Cookie
+--> Client-side Rendering --> No Reload --> Using Authorization
+
+--> This middleware running for each and every single request on our rendered website
+--> isLoggedIn --> Only for render pages, no errors!
+--> Cookie expired --> Render error?
+--> res.locals.user = currentUser; --> Pug template will receive user variable
+--> app.use(isLoggedIn)
+---
+if user
+  a.nav__el.nav__el--logout(href='#') Logout
+  a.nav__el(href='#')
+    img.nav__user-img(src=`/img/users/${user.photo}`, alt=`Photo of ${user.name}`)
+    span= user.name.split(' ')[0]
+else
+  a.nav__el(href='/login') Log in
+  a.nav__el.nav__el--cta(href='#') Sign up
+---
+--> redirect to homepage after logging in
+--> Check status is success --> Redirect --> location.assign('/')
+--> Is not success --> throw error --> error.response.data.message
+
+window.location.href; // Returns the href (URL) of the current page
+window.location.hostname; // Returns the domain name of the web host
+window.location.pathname; // Returns the path and filename of the current page
+window.location.protocol; // Returns the web protocol used (http: or https:)
+window.location.assign; // Loads a new document
+window.location.replace; // Replace the current location with new one.
+
+11.3. Alert message and JS Bundling
+--> alert.js
+--> Parcel --> Blazing fast, zero configuration web application bundler
+--> npm install parcel-bundler --save-dev
+--> "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
+--> "build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
+--> index.js
+--> run watch:js
+--> npm install @babel/polyfill --> import '@babel/polyfill' \
+--> use \
++ npm install core-js --> import 'core-js/stable'
++ npm install regenerator-runtime --> import ''
+
+--> export login function
+--> axios npm
+--> displayMap(locations)
+??? fetch the same JS file?
+const mapBox, loginForm
+
+--> create alert
+--> showAlert(type, message) 'success' | 'error'
+--> hideAlert
+
+--- Parcel
+1. Building with Parcel and NPM Scripts
+npm install parcel --save-dev
+npx parcel index.html
+--> Running Parcel with NPM Scripts
+"start": "parcel index.html"
+"build": "parcel build index.html"
+
+2. Configuring Babel and Polyfilling
+--> Babel
+--> Plugin \
++ Arrow-functions
++ Block-scopred-functions
+...
+--> Preset --> Basically a bunch of plugins bundled together
+@babel/preset-env
+--> By default, Parcel is going to use this preset
+--> This preset will automatically select which JS features should be compiled \
+--> based on browser support
+--> Only < 0.25% are not going to be supported by the transpiling \
+with this preset here
+--> Transpiling v/s Polyfilling
+--> Transpile --> ES6 to equivalent ES5 syntax
+--> Polyfill --> New ES6 Syntax
+npm install core-js
+import 'core-js/stable'
+npm install regenerator-runtime
+import 'regenerator-runtime/runtime' --> Polyfilling async functions
+
+--> Setting up Parcel with FKF project
+--> Parcel can bundle SASS --> HTML link to SCSS directly
+
+3. MVC architecture (Structure - Maintainability - Expandability)
+--> Structure --> How we organize and divide the code into \
+different modules, classes and functions
+--> Maintainability --> We need to be able to easily change it in the future
+--> Expandability --> We also need to be able to easily add new features
+S + M + E --> The perfect Architecture
+
+--> Components of any Architecture
++ Business Logic --> The code solves the actual business problem
++ State --> Essentially stores all the data about the application
+--> Be "Single source of truth" --> which should be kept in Sync with the UI \
+--> means that if some data changes in the State, then the User Interface should \
+reflect that, and the same is true the orther way around
++ HTTP Library --> Responsible for making and receiving AJAX requests
++ Application Logic (Router) --> Code that is only concerned about \
+the implementation of application itself --> Navigation, UI events,...
++ Presentation Logic (UI Layer) --> Code that is concerned about the visible part \
+of the application --> Essentially displays application state
+
+4. Helpers and Configuration Files
+--> config.js --> Put all the variables that should be constants \
+and should be reused accross the project
+--> helpers.js --> Contain a couple of functions that we reuse \
+over and over in our project
+---
+
+12. Logging out Users
+
+--> Cookie --> HTTP Only Cookie \
+--> Can not manipulate this Cookie in anyway in our browser
+--> logout --> send new cookie to override current cookie
+--> no need to set secure = true cause there is no sensitive data
+---
+res.cookie('jwt', 'loggedout', {
+  expires: new Date(Date.now() + 10 * 1000),
+  httpOnly: true
+});
+viewRouter.get('/logout', logout);
+---
+--> Get cookie --> Reload to log out
+--> location.reload(true)
+--> true --> force a reload from the server and not from browser cache
+
+13. Rendering Error Pages
+
+--> Tour not found with slug --> 404 error
+--> Check API or Rendered Website
+---
+if (req.originalUrl.startsWith('/api'))
+else
+  res.status(error.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: error.message
+  });
+---
+--> views --> error.pug
+--> Error Handling for just API and for just Rendered Website
+--> Prod --> not isOperational --> message --> 'Please try again later'
+
+--> Fix error /bundle.js.map not found!
+add to watch:js --public-url ./
+
+14. Building User Account Page
+
+--> account.pug
+--> mixin navItem(link, text, icon, active)
+--> if (user.role === 'admin')
+--> value=`${user.name}`
+--> `/img/users/${user.photo}` --> case: new user doesn't have any photo
+--> user.get('/me', protect, getAccount)
+--> protect --> handles login error --> protect v/s isLoggedIn
+--> only use protect or isLoggedIn to check
+--> protect --> res.locals.user = user
+--> title: 'Your account'
+
+15. Updating User Data
+
+--> Specify the POST method right on the form along with the URL \
+where the POST request should be sent to
+--> Body parser --> app.use(express.urlencoded({ extended: true, limit: '10kb' }))
+--> form(action='/submit-user-data', method='POST')
+--> name='name', name='email'
+--> viewRouter.post('/submit-user-data', protect, updateUserData);
+--> Fix login form with '.form--login'
+
+--> After send Post request --> Keep POST with the same data
+
+--> method-override npm package
+--> Not a good user experience --> Submit data and then all of a sudden, \
+we went to a completely new page
+
+16. Updating User Data with API
+
+--> remove form action and method
+--> updateSettings.js
+--> checkUpdateUsername --> checkUpdateMe
+--> updateUserName --> updateMe
+
+17. Updating User Password with API
+
+--> '.form-user-settings' --> '.form-user-password'
+--> updateSettings function
+--> await updateSetting --> clear password input field
+--> '.btn--save-password'

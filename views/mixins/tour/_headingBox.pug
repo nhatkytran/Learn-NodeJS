@@ -1,0 +1,5 @@
+mixin headingBox(text, icon)
+  .heading-box__detail
+    svg.heading-box__icon
+      use(xlink:href=`/img/icons.svg#${icon}`)
+    span.heading-box__text= text

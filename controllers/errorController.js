@@ -2,13 +2,19 @@ const { AppError } = require('./../utils');
 
 const { NODE_ENV } = process.env;
 
-const sendErrorDev = (errorObject, res) => {
+const sendErrorDevAPI = (errorObject, res) => {
   const { error, statusCode, status, message, stack } = errorObject;
 
   res.status(statusCode).json({ status, message, error, stack });
 };
 
-const sendErrorProd = (errorObject, res) => {
+const sendErrorDevRender = ({ statusCode, errorMessage }, res) =>
+  res.status(statusCode).render('error', {
+    title: 'Something went wrong!',
+    errorMessage,
+  });
+
+const sendErrorProdAPI = (errorObject, res) => {
   const { isOperational } = errorObject;
 
   if (isOperational) {
@@ -20,6 +26,18 @@ const sendErrorProd = (errorObject, res) => {
 
     res.status(500).json({ status: 'error', message: 'Something went wrong!' });
   }
+};
+
+const sendErrorProdRender = (
+  { isOperational, statusCode, errorMessage },
+  res
+) => {
+  const title = 'Something went wrong';
+
+  res.status(isOperational ? statusCode : 500).render('error', {
+    title,
+    errorMessage: isOperational ? errorMessage : title,
+  });
 };
 
 const handleCastErrorDB = error =>
@@ -42,7 +60,7 @@ const handleJWTError = () =>
 const handleTokenExpiredError = () =>
   new AppError('Token has expired! Please login again.', 401);
 
-const globalErrorHandler = (error, _, res, __) => {
+const globalErrorHandler = (error, req, res, _) => {
   let newError = NODE_ENV === 'development' ? error : Object.create(error);
 
   if (NODE_ENV === 'production') {
@@ -71,10 +89,19 @@ const globalErrorHandler = (error, _, res, __) => {
 
   const errorObject = { error: newError, statusCode, status, message };
 
-  if (NODE_ENV === 'development') sendErrorDev({ ...errorObject, stack }, res);
+  if (NODE_ENV === 'development')
+    if (req.originalUrl.startsWith('/api'))
+      sendErrorDevAPI({ ...errorObject, stack }, res);
+    else sendErrorDevRender({ statusCode, errorMessage: message }, res);
 
   if (NODE_ENV === 'production')
-    sendErrorProd({ ...errorObject, isOperational }, res);
+    if (req.originalUrl.startsWith('/api'))
+      sendErrorProdAPI({ ...errorObject, isOperational }, res);
+    else
+      sendErrorProdRender(
+        { isOperational, statusCode, errorMessage: message },
+        res
+      );
 };
 
 module.exports = globalErrorHandler;

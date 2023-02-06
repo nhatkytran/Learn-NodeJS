@@ -19,9 +19,9 @@ const reviews = getData('reviews.json');
 const importData = async () => {
   try {
     await Promise.all([
-      Tour.create(tours, { validateBeforeSave: false }).exec(),
-      User.create(users, { validateBeforeSave: false }).exec(),
-      Review.create(reviews, { validateBeforeSave: false }).exec(),
+      Tour.create(tours, { validateBeforeSave: false }),
+      User.create(users, { validateBeforeSave: false }),
+      Review.create(reviews, { validateBeforeSave: false }),
     ]);
 
     console.log('Data import - Successful!');

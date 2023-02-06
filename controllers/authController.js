@@ -40,13 +40,25 @@ exports.login = catchAsync(async (req, res) => {
   await createSendToken(user._id, 200, res);
 });
 
+exports.logout = catchAsync(async (_, res) => {
+  res.cookie('jwt', 'logged-out', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+
+  res.status(200).json({ status: 'success' });
+});
+
 exports.protect = catchAsync(async (req, _, next) => {
   const { authorization } = req.headers;
 
-  if (!authorization || !authorization.startsWith('Bearer'))
-    throw new AppError('Please login to get access!', 401);
+  let token;
+  if (authorization && authorization.startsWith('Bearer'))
+    token = authorization.split(' ').at(-1);
+  else token = req.cookies.jwt;
 
-  const token = authorization.split(' ').at(-1);
+  if (!token) throw new AppError('Please login to get access!', 401);
+
   const decoded = await verifyJWT(token); // Time out error and invalid error
 
   const query = User.findById(decoded.id);
@@ -65,6 +77,35 @@ exports.protect = catchAsync(async (req, _, next) => {
     );
 
   req.user = user;
+
+  next();
+});
+
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  const { authorization } = req.headers;
+  const cookie = req.cookies.jwt;
+
+  if (authorization || cookie) {
+    let token;
+    if (authorization && authorization.startsWith('Bearer'))
+      token = authorization.split(' ').at(-1);
+    else token = cookie;
+
+    let decoded;
+    try {
+      decoded = await verifyJWT(token); // Time out error and invalid error
+    } catch (_) {
+      return next();
+    }
+
+    const query = User.findById(decoded.id);
+    const user = await query;
+
+    if (!user) return next();
+    if (user.changedPassword(decoded.iat)) return next();
+
+    res.locals.user = user;
+  }
 
   next();
 });
@@ -162,16 +203,16 @@ exports.updatePassword = catchAsync(async (req, res) => {
   const query = User.findById(req.user._id).select('+password');
   const user = await query;
 
-  const { oldPassword, password, passwordConfirm } = req.body;
+  const { currentPassword, password, passwordConfirm } = req.body;
 
-  if (!oldPassword || !password || !passwordConfirm)
+  if (!currentPassword || !password || !passwordConfirm)
     throw new AppError(
-      'Please provide oldPassword, password and passwordConfirm',
+      'Please provide currentPassword, password and passwordConfirm',
       400
     );
 
-  if (!(await user.correctPassword(String(oldPassword))))
-    throw new AppError('Incorrect oldPassword! Please try again.', 401);
+  if (!(await user.correctPassword(String(currentPassword))))
+    throw new AppError('Incorrect currentPassword! Please try again.', 401);
 
   user.password = String(password);
   user.passwordConfirm = String(passwordConfirm);

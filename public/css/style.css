@@ -122,6 +122,7 @@ body {
     to(#28b487)
   );
   background-image: linear-gradient(to right, #7dd56f, #28b487);
+  background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   letter-spacing: 0.1rem;
@@ -608,6 +609,19 @@ body {
   -ms-scroll-snap-type: x mandatory;
   scroll-snap-type: x mandatory;
 }
+.reviews::-webkit-scrollbar {
+  width: 1rem;
+  background: transparent;
+}
+
+.reviews::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.reviews::-webkit-scrollbar-thumb {
+  background: linear-gradient(to right bottom, #28b487, #7dd56f);
+}
+
 .reviews__card {
   width: 30rem;
   padding: 4rem;
@@ -830,6 +844,7 @@ body {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
+  justify-content: flex-end;
 }
 .footer__nav li {
   margin-left: 1.5rem;

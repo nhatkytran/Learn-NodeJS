@@ -30,21 +30,19 @@ exports.createNewUser = catchAsync(async (_, res) =>
   })
 );
 
-exports.checkUpdateUserName = catchAsync(async (req, _, next) => {
-  if (req.params.id !== String(req.user._id))
-    throw new AppError('You can only update your own name!', 400);
-
-  if (Object.keys(req.body).length > 1)
+exports.checkUpdateMe = catchAsync(async (req, _, next) => {
+  if (Object.keys(req.body).length > 1 || !req.body.name)
     throw new AppError(
       `Route ${req.originalUrl} only used for updating user's name!`,
       400
     );
-  if (!req.body.name) throw new AppError('Please provide field < name >!', 400);
+
+  req.params.id = req.user._id;
 
   next();
 });
 
-exports.updateUserName = handlerFactory.updateOne({
+exports.updateMe = handlerFactory.updateOne({
   Model: User,
   idParam: 'id',
   documentName: 'User',
