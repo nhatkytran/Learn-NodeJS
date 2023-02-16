@@ -6,8 +6,8 @@ const {
   catchAsync,
   createSendToken,
   cryptoHash,
+  Email,
   verifyJWT,
-  sendEmail,
 } = require('./../utils');
 
 exports.signup = catchAsync(async (req, res) => {
@@ -20,6 +20,9 @@ exports.signup = catchAsync(async (req, res) => {
     passwordConfirm: String(passwordConfirm),
   });
   const user = await query;
+
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  await new Email(user, url).sendWelcome();
 
   await createSendToken(user._id, 201, res);
 });
@@ -140,14 +143,12 @@ exports.forgotPassword = catchAsync(async (req, res) => {
 
   await user.save({ validateModifiedOnly: true });
 
-  const resetURL = `${req.protocol}://${req.get(
-    'host'
-  )}/api/users/resetPassword/${email}/${resetToken}`;
-  const subject = 'Your password reset token (only valid for 10 mins)';
-  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}\nIf you didn't forget your password, please ignore this email!`;
-
   try {
-    await sendEmail({ email, subject, message });
+    const resetURL = `${req.protocol}://${req.get(
+      'host'
+    )}/api/users/resetPassword/${email}/${resetToken}`;
+
+    await new Email(user, resetURL).sendPasswordReset();
   } catch (error) {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;

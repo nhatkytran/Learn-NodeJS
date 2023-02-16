@@ -13,7 +13,7 @@ block content
       nav.user-view__menu
         ul.side-nav
           +navItem('#', 'Settings', 'icon-settings', true)
-          +navItem('#', 'My bookings', 'icon-briefcase')
+          +navItem('/my-tours', 'My bookings', 'icon-briefcase')
           +navItem('#', 'My reviews', 'icon-star')
           +navItem('#', 'Billing', 'icon-credit-card')
         if (user.role === 'admin')
@@ -37,9 +37,11 @@ block content
             //-   input#email.form__input(type='email', value='admin@natours.io', required)
             .form__group.form__photo-upload
               img.form__user-photo(src=`/img/users/${user.photo ||'default.jpg'}`, alt=`Photo of ${user.name}`)
-              a.btn-text(href='') Choose new photo
+              input.form__upload(type="file", accept="image/*", id="photo", name="photo")
+              label(for="photo") Choose new photo
+            
             .form__group.right
-              button.btn.btn--small.btn--green Save settings
+              button.btn.btn--small.btn--green.btn--save-info Save settings
         .line &nbsp;
         .user-view__form-container
           h2.heading-secondary.ma-bt-md Password change

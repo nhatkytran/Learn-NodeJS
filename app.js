@@ -17,6 +17,7 @@ const {
   tourRouter,
   userRouter,
   reviewRouter,
+  bookingRouter,
 } = require('./routes');
 
 const { NODE_ENV } = process.env;
@@ -81,6 +82,7 @@ app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/bookings', bookingRouter);
 
 // Unhandled routes
 

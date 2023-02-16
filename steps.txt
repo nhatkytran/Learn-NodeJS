@@ -1038,3 +1038,339 @@ we went to a completely new page
 --> updateSettings function
 --> await updateSetting --> clear password input field
 --> '.btn--save-password'
+
+SECTION - 13
+
+1. Image Uploads using Multer
+
+--> Multer --> a very popular middleware to handle multi-part form data
+--> npm install multer
+--> Fix checkUpdateMe
+--- userRoutes.js
+const multer = require('multer');
+// const upload = multer({ dest: 'public/img/users' });
+const upload = multer({
+  dest: path.join(__dirname, '..', 'public', 'img', 'users'),
+});
+router.patch('/updateMe', upload.single('photo'), updateMe);
+---
+// req.file v/s req.body
+--> body parser is not really able to handle files \
+--> the file is not showing up in the body at all
+--> new image is created in 'public/img/users'
+
+--> Test mkdirp package
+---
+const mkdirp = require('mkdirp')
+...
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const path = `/images/${req.user._id}/`
+    mkdirp(path, err => {
+        if (err) return cb(err)
+        else cb(null, path)
+    });
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + '-' + Date.now())
+  }
+})
+---
+--> take a look at multer npm
+
+2. Configuring Multer
+
+--> First --> Giving images a better filename --> multer.diskStorage
+
+--> userController.js --> exports.uploadUserPhoto
+--> const multerStorage = multer.diskStorage();
+--> filename --> user-userid-current_timestamp.file_extension
+--> const ext = file.minetype.split('/').at(-1);
+--> cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+
+--> Second --> Allowing only image files to be uploaded onto our server --> multerFilter
+--> Not an image! Please upload only images.
+
+--> const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter
+});
+
+3. Saving Image Name to Database
+
+--> Update photo --> checkUpdateMe.js
+--> if (req.file)...
+
+--> Create new user --> userModel.js --> default.jpg
+--> photo: {
+  type: String,
+  default: 'default.jpg'
+}
+
+--> Fix AxiosError
+{
+  name: 'AxiosError',
+  code: 'ERR_NETWORK'
+}
+---
+if (error.name === 'AxiosError' && error.code === 'ERR_NETWORK')
+  return showAlert(
+    'error',
+    'Something went wrong! Check your network connection and try again.'
+  );
+---
+
+4. Resizing Images
+
+--> resizeUserPhoto
+--> npm install sharp --> sharp --> image processing library for NodeJS
+
+--> when doing image processing right after uploading a file, \
+then it's always best to not even save the file to the disk, \
+but instead save it to memory
+--> const multerStorage = multer.memoryStorage();
+--> this way the image will then be stored as a buffer --> req.file.buffer
+--> resizeUserPhoto
+--> if there is no photo --> next()
+--> else
+---
+filename = `<>.jpeg` --> used to link database to image in files system
+sharp(< buffer >)
+  .resize(< witdth >, < height >) 500 / 500
+  .toFormat('jpeg')
+  .jpeg({ quality: 90 })
+  .toFile(`<path>/${filename}`)
+---
+--> test async
+
+5. Adding Image Uploads to Form
+
+--> If not using API --> enctype='multipart/form-data'
+
+--> input.form__upload(type='file', accept='image/*', id='photo', name='photo')
+--> add "multiple" attribute --> choose multiple images
+--> label(for='photo') Choose new photo
+
+--> create a multi-part form data
+---
+const form = new FormData();
+form.append('photo', < element >.files[0])
+---
+
+--> const link = URL.createObjectURL(file)
+--> URL.revokeObjectURL(link)
+--> fileReader API --> https://www.youtube.com/watch?v=2okUvC2qBWk
+
+* --> upload new image --> delete old image
+---
+file.existsSync(< path >)
+file.unlinkSync(< path >)
+---
+
+6. Uploading Multiple Images
+
+--> Learn how to upload multiple files at the same time and \
+and also how to process multiple images at the same time
+--> updateTour
+--> upload.single
+--> upload.array
+--> upload.fields
+--> maxCount --> error ?
+--> uploadTourImages
+--> resizeTourImages --> req.files
+---
+// upload.array(< name >, < maxCount >)
+exports.uploadTourImages = upload.fields([
+  { name: < name >, maxCount: < number > }
+]);
+---
+--> maxCount error --> multer automatically calls next(error)
+{
+  "name": "MulterError",
+  "code": "LIMIT_UNEXPECTED_FILE"
+}
+
+7. Processing Multiple Images
+
+--> fix error --> await sharp in user controller
+--> const imageCoverFilename = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+--> const filename = `tour-${req.params.id}-${Date.now()}-${index + 1}.jpeg`;
+
+8. Building a Complex Email Handler
+
+--> EMAIL_FROM
+--> Dev --> MailTrap
+--> Prod --> SendGrid
+class Email(user, url)
++ to --> user.email
++ firstName --> user.name.split(' ')[0]
++ url --> url
++ from --> `${EMAIL_FROM}`
+
+--> newTransport --> dev v/s prod
+
+--> send(template, subject)
+
++ Render HTML based on a Pug template
+--> views/email/welcome.pug
+--> responsive-html-email-template
+---
+const pug = require('pug');
+pug.renderFile('welcome', {
+  firstName: this.firstName,
+  url: this.url,
+  subject
+}) --> html
+---
+
++ Define email options
+--> npm install html-to-text
+---
+const htmlToText = require('html-to-text');
+text: htmlToText.fromString(html) // deprecated
+---
+
++ Create a transport and send email
+---
+await this.newTansport().sendMail(options)
+---
+
+--> sendWelcome --> this.send('welcome', 'Welcome to the Natours Family!')
+
+9. Email Templates with Pug: Welcome Emails
+
+--> welcome.pug
+--> _style.pug
+--> baseEmail.pug
+subject
+firstName
+url --> `${req.protocol}://${req.get('host')}/me`
+--> authController.js --> signup
+
+10. Sending Password Reset Emails
+
+--> passwordReset.pug
+
+subject
+firstName
+message --> url
+(Website for this action not yet implemented)
+`${url}` --> Reset your password
+---
+async sendPasswordReset() {
+  await this.send(
+    'passwordReset',
+    'Your password reset token (valid for only 10 minutes)'
+  );
+}
+---
+
+11. Sendgrid --> Real Emails
+
+--> mailsac
+
+12. Credit Card Payments with Stripe
+
+--> Settings --> Branding --> #55c57a
+--> Developers --> API Keys
++ Publshable Key --> Front-end
++ Secret Key --> Back-end
+--> Stripe Checkout
+
+--> Stripe Workflow
+
+--> Backend --> Secret Key --> create Stripe Checkout Session
+--> This session is gonna contaion a bunch of data about the object \
+that can be purchased
+
+--> Frontend
+--> Request Checkout Session
+--> Public key --> Charge Credit Card using Session
+
+--> Backend --> Secret Key --> use Striper Webhook to create new Booking
+
+13. Integrating Stripe into the Back-End
+
+--> create API endpoint --> which will create and send back \
+a Stripe Checkout Session
+--> bookingRoute.js
+--> bookingController.js
+---
+router.get('/checkout-session/:tourId', protect, getCheckoutSession)
+// 1. Get the currently booked tour
+// 2. Create checkout session
+// 3. Create session as response
+---
+--> npm install stripe
+--> STRIPE_SECRET_KEY
+
+--> const session = await stripe.checkout.sessions.create(options)
+--> res.status(200).json({ status: 'success', session });
+
+14. Processing Payments on the Front-End
+
+---
+if user
+  button#book-tour(data-tour-id=`${tour.id}`) Book tour now
+else
+  a(href='/login') Log in to book tour
+---
+
+--> stripe.js --> link
+---
+const stripe = Stripe(< Publishable Key >);
+const bookTour = tourId => {
+  1. Get Checkout Session from API
+  2. Create checkout form + charge credit card
+}
+await stripe.redirectToCheckout({
+  sessionId: session.data.session.id
+});
+---
+
+15. Modelling the Bookings
+
+--> tour, user, price, createdAt, paid
+
+16. Creating new Bookings on Checkout Success
+
+--> 127.0.0.1:3000/?params=< params >
+--> createBookingCheckout
+--> res.redirect(< url >);
+
+17. Redering a User's Booked Tours
+
+--> /my-tours --> getMyTours
+---
+res.status(200).render('overview', {
+  title: 'My Tours',
+  tours
+});
+---
+
+--> _id: { $in: [_id, _id,...] }
+--> { $in: [{_id}, {_id}] }
+
+18. Finishing the Bookings API
+
+--> Creating
+--> Getting
+--> Updating
+--> Deleting
+
+19. Final Considerations
+
+--> Challenges (API)
+
+--> Implement restriction that users can only review a tour \
+that they have actually booked
+--> Implement nested booking routes: /tours/:id/bookings and \
+/users/:id/bookings
+--> Improve tour dates
+--> Implement advanced authentication features
+--> Sign up form
+--> Add a review directly on the website
+--> Hide the entire booking section
+--> Implement "like tour" functionality
+--> my reviews
+--> Manage pages for administrators

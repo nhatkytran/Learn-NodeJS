@@ -8,4 +8,4 @@ exports.cryptoHash = require('./cryptoHash');
 exports.requiredMessage = require('./requiredMessage');
 exports.signJWT = require('./signJWT');
 exports.verifyJWT = require('./verifyJWT');
-exports.sendEmail = require('./sendEmail');
+exports.Email = require('./sendEmail');

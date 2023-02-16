@@ -1,6 +1,8 @@
 const express = require('express');
 
 const {
+  uploadTourImages,
+  resizeTourImages,
   getTourStats,
   aliasTopTours,
   getMonthlyPlan,
@@ -43,7 +45,13 @@ tourRouter
 tourRouter
   .route('/:id')
   .get(getTour)
-  .patch(protect, restrictTo('admin'), updateTour)
+  .patch(
+    protect,
+    restrictTo('admin'),
+    uploadTourImages,
+    resizeTourImages,
+    updateTour
+  )
   .delete(protect, restrictTo('admin'), deleteTour);
 
 module.exports = tourRouter;

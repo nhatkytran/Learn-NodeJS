@@ -1,6 +1,8 @@
 const express = require('express');
 
 const {
+  uploadUserPhoto,
+  resizeUserPhoto,
   getAllUsers,
   getUser,
   getMe,
@@ -40,7 +42,7 @@ userRouter
 userRouter
   .route('/me')
   .get(protect, getMe)
-  .patch(protect, checkUpdateMe, updateMe);
+  .patch(protect, uploadUserPhoto, resizeUserPhoto, checkUpdateMe, updateMe);
 
 userRouter
   .route('/:id')

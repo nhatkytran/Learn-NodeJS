@@ -60,6 +60,9 @@ const handleJWTError = () =>
 const handleTokenExpiredError = () =>
   new AppError('Token has expired! Please login again.', 401);
 
+const handleMulterMaxCountError = error =>
+  new AppError(`${error.field}: Number of files are over-limit!`, 400);
+
 const globalErrorHandler = (error, req, res, _) => {
   let newError = NODE_ENV === 'development' ? error : Object.create(error);
 
@@ -80,6 +83,13 @@ const globalErrorHandler = (error, req, res, _) => {
     // Token Expired Error
     if (newError.name === 'TokenExpiredError')
       newError = handleTokenExpiredError();
+
+    // Multer Error - Max Count
+    if (
+      newError.name === 'MulterError' &&
+      newError.code === 'LIMIT_UNEXPECTED_FILE'
+    )
+      newError = handleMulterMaxCountError(newError);
   }
 
   const statusCode = newError.statusCode || 500;
