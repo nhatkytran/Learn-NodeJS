@@ -15,7 +15,9 @@ const {
   deleteTour,
 } = require('./../controllers/tourController');
 const { protect, restrictTo } = require('./../controllers/authController');
+
 const reviewRouter = require('./reviewRoutes');
+const bookingRouter = require('./bookingRoutes');
 
 const tourRouter = express.Router();
 
@@ -25,6 +27,7 @@ const tourRouter = express.Router();
 // });
 
 tourRouter.use('/:tourId/reviews', reviewRouter);
+tourRouter.use('/:tourId/bookings', bookingRouter);
 
 tourRouter.route('/top-5-cheap').get(aliasTopTours, getAllTours);
 tourRouter.route('/stats').get(protect, restrictTo('admin'), getTourStats);

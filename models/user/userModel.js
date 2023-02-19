@@ -1,8 +1,11 @@
-const crypto = require('crypto');
 const mongoose = require('mongoose');
 
 const userSchemaDefinition = require('./userSchemaDefinition');
-const { bcryptHash, bcryptCompare, cryptoHash } = require('./../../utils');
+const {
+  bcryptCompare,
+  bcryptHash,
+  createTokenFactory,
+} = require('./../../utils');
 
 const userSchema = new mongoose.Schema(userSchemaDefinition, {
   toJSON: { virtuals: true },
@@ -38,15 +41,14 @@ userSchema.methods.changedPassword = function (tokenTimestamp) {
   return false;
 };
 
-userSchema.methods.createPasswordResetToken = async function () {
-  const resetToken = crypto.randomBytes(64).toString('hex');
-  const expireTimestamp = Date.now() + 10 * 60 * 1000;
+userSchema.methods.createPasswordResetToken = createTokenFactory(
+  'passwordResetToken',
+  'passwordResetExpires',
+  10
+);
 
-  this.passwordResetToken = await cryptoHash(resetToken);
-  this.passwordResetExpires = expireTimestamp;
-
-  return resetToken;
-};
+userSchema.methods.createEmailConfirmToken =
+  createTokenFactory('activeEmailToken');
 
 const userCollectionName = 'users';
 const User = mongoose.model('User', userSchema, userCollectionName);

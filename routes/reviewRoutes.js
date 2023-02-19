@@ -4,6 +4,7 @@ const {
   checkGetAllReviews,
   getAllReviews,
   checkNewReview,
+  checkTourIsBooked,
   createNewReview,
   checkWhoDeleteReview,
   checkUpdateReview,
@@ -19,7 +20,7 @@ reviewRouter.use(protect);
 reviewRouter
   .route('/')
   .get(checkGetAllReviews, getAllReviews)
-  .post(restrictTo('user'), checkNewReview, createNewReview);
+  .post(restrictTo('user'), checkNewReview, checkTourIsBooked, createNewReview);
 
 reviewRouter
   .route('/:reviewId')

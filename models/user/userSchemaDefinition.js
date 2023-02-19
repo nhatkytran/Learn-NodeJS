@@ -13,6 +13,14 @@ const userSchemaDefinition = {
     lowercase: true,
     validate: [validator.isEmail, 'Please provide a valid email!'],
   },
+  activeEmail: {
+    type: Boolean,
+    default: false,
+  },
+  activeEmailToken: {
+    type: String,
+    select: false,
+  },
   photo: {
     type: String,
     default: 'default.jpg',

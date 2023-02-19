@@ -3,7 +3,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
-const { Tour, User, Review } = require('./../../models');
+const { Tour, User, Review, Booking } = require('./../../models');
 
 dotenv.config({ path: path.join(__dirname, '..', '..', 'config.env') });
 
@@ -12,7 +12,7 @@ const { DATABASE, DATABASE_NAME, DATABASE_PASSWORD } = process.env;
 const getData = fileName =>
   JSON.parse(fs.readFileSync(path.join(__dirname, fileName), 'utf-8'));
 
-const tours = getData('tours.json');
+const tours = getData('oneTour.json');
 const users = getData('users.json');
 const reviews = getData('reviews.json');
 
@@ -39,6 +39,7 @@ const deleteData = async () => {
       Tour.deleteMany().exec(),
       User.deleteMany().exec(),
       Review.deleteMany().exec(),
+      Booking.deleteMany().exec(),
     ]);
 
     console.log('Data delete - Successful!');

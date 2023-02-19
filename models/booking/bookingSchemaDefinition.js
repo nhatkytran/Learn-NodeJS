@@ -15,6 +15,10 @@ const bookingSchemaDefinition = {
     type: Number,
     required: [true, 'Booking must have a price.'],
   },
+  startDate: {
+    type: Date,
+    required: [true, 'Booking must have a startDate!'],
+  },
   createdAt: {
     type: Date,
     default: Date.now,

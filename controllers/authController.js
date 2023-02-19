@@ -21,6 +21,43 @@ exports.signup = catchAsync(async (req, res) => {
   });
   const user = await query;
 
+  try {
+    const token = user.createEmailConfirmToken();
+    await user.save({ validateModifiedOnly: true });
+
+    const url = `${req.protocol}://${req.get(
+      'host'
+    )}/email-confirm/${email}/${token}`;
+    await new Email(user, url).sendEmailConfirm();
+  } catch (error) {
+    console.error(error);
+    await User.findByIdAndDelete(user._id);
+
+    throw new AppError('Something went wrong! Please try again.', 500);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: `Sign up successfully! Please check your email < ${email} > to activate your account.`,
+  });
+});
+
+exports.activateEmail = catchAsync(async (req, res) => {
+  const { email, token } = req.params;
+
+  const query = User.findOne({
+    email,
+    activeEmailToken: await cryptoHash(token),
+  });
+  const user = await query;
+
+  if (!user) throw new AppError('Invalid email or token', 400);
+
+  user.activeEmail = true;
+  user.activeEmailToken = undefined;
+
+  await user.save({ validateModifiedOnly: true });
+
   const url = `${req.protocol}://${req.get('host')}/me`;
   await new Email(user, url).sendWelcome();
 
@@ -39,6 +76,8 @@ exports.login = catchAsync(async (req, res) => {
 
   if (!user || !(await user.correctPassword(password)))
     throw new AppError('Incorrect email or password!', 401);
+
+  if (!user.activeEmail) throw new AppError('Inactive email!', 401);
 
   await createSendToken(user._id, 200, res);
 });
@@ -172,7 +211,7 @@ exports.forgotPassword = catchAsync(async (req, res) => {
 
 exports.resetPassword = catchAsync(async (req, res) => {
   const { email, token } = req.params;
-  const hashedToken = await cryptoHash(token);
+  const { hashedToken } = await cryptoHash(token);
 
   const query = User.findOne({
     email,

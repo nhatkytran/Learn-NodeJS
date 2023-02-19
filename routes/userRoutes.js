@@ -14,6 +14,7 @@ const {
 } = require('./../controllers/userController');
 const {
   signup,
+  activateEmail,
   login,
   logout,
   protect,
@@ -23,9 +24,16 @@ const {
   updatePassword,
 } = require('../controllers/authController');
 
+const bookingRouter = require('./bookingRoutes');
+
 const userRouter = express.Router();
 
+userRouter.use('/:userId/bookings', bookingRouter);
+
 userRouter.post('/signup', signup);
+
+userRouter.get('/email-confirm/:email/:token', activateEmail);
+
 userRouter.post('/login', login);
 userRouter.get('/logout', logout);
 

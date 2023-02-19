@@ -1,13 +1,13 @@
 const handlerFactory = require('./handlerFactory');
-const { Review, Tour } = require('./../models');
+const { Review, Tour, Booking } = require('./../models');
 const { AppError, catchAsync } = require('../utils');
 
-exports.checkGetAllReviews = catchAsync(async (req, _, next) => {
+exports.checkGetAllReviews = async (req, _, next) => {
   const { tourId } = req.params;
   req.filterOptions = tourId ? { tour: tourId } : {};
 
   next();
-});
+};
 
 exports.getAllReviews = handlerFactory.getAll({
   Model: Review,
@@ -25,6 +25,15 @@ exports.checkNewReview = catchAsync(async (req, _, next) => {
 
   const { review, rating } = req.body;
   req.body = { review, rating, tour: tourId, user: userId };
+
+  next();
+});
+
+exports.checkTourIsBooked = catchAsync(async (req, _, next) => {
+  const { tour: tourId, user: userId } = req.body;
+
+  const booking = await Booking.findOne({ tour: tourId, user: userId });
+  if (!booking) throw new AppError("You haven't booked this tour yet!", 400);
 
   next();
 });

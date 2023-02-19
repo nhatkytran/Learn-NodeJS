@@ -79,7 +79,18 @@ const tourSchemaDefinition = {
     type: Date,
     default: Date.now,
   },
-  startDates: { type: [Date] },
+  startDates: [
+    {
+      startDate: {
+        type: Date,
+        required: [true, 'A tour must have a startDate!'],
+      },
+      participants: {
+        type: Number,
+        default: 0,
+      },
+    },
+  ],
   slug: { type: String },
   secretTour: {
     type: Boolean,
