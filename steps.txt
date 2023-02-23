@@ -1468,3 +1468,11 @@ git rm -r --cached <folder>
 
 https://www.udemy.com/course/nodejs-express-mongodb-bootcamp/learn/lecture/15087432#questions/18696110
 https://www.freecodecamp.org/news/how-to-deploy-nodejs-application-with-render/amp/
+
+--> sudo npm install --location=global heroku
+--> heroku login
+--> "start": "node server.js"
+--> "engines": {
+  "node": ">=10.0.0"
+}
+--> process.env.PORT
