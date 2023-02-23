@@ -1393,21 +1393,78 @@ activeEmailToken: {
   type: String,
   select: false,
 },
+--> emailActivatedDate ?
 
++++ Refresh Token +++
+
+--> Why we need Refresh Token?
+--> https://www.udemy.com/course/nodejs-tutorial-and-projects-course/learn/lecture/29011806#questions/16122044
++ Access Token v/s Refresh Token
++ Resource Server v/s Authorization Server
+
+--> req.headers['user-agent'] & req.ip
+--> Session cookie --> used to track session of a user --> all the information that server need to regconize user
+
+--> JWT_SECRET_ACCESS_TOKEN
+--> JWT_SECRET_REFRESH_TOKEN
+
+--> Send multiple cookies --> res.cookies() multiple times
+--> use maxAge in cookie options
+--> protect --> if accessToken --> next() --> else --> \
+send new accessToken on the way in protect
+
+--> Generate both cookies when create new accessToken using refreshToken
 
 CHALLENGES WEBSITE
 
 - Implement a sign up form, similar to login form;
-
 - On the tour detail page, if a user has taken a tour, allow them add a review directly on the website. Implement a form for this.
-
 - Hide the entire booking section on the detail page if current user has already booked the tour(also prevent duplicate bookings on the model);
-
 - Implement "like tour" functionality, with fav tour page;
 
-- On the user account page, implement the "My Reviews" page, wehere all reviews are displayed, and a user can edit them. (If you know REACT, this would be an amazing way to use the Natours API and train your skills!);
+- On the user account page, implement the "My Reviews" page, \
+wehere all reviews are displayed, and a user can edit them. \
+(If you know REACT, this would be an amazing way to use \
+the Natours API and train your skills!);
 
 - For administrators, implement all the "Manage" pages, where they can CRUD tours, users, reviews and bookings.
 
 --> Deploy Website on Railway
 --> https://www.udemy.com/course/nodejs-express-mongodb-bootcamp/learn/lecture/15087388#questions/18696110
+
++++ URL +++
+--> req.protocol
+--> req.get('host')
+--> req.origin
+--> req.originalUrl
+
+SECTION 14 - Deployment
+
+1. Preparing our App for Deployment
+
+--> npm install compression
+--> Whenever we send a text response to a client, no matter if that' JSON or HTML code. \
+With compression package, that text will be dramatically compressed
+---
+const compression = require('compression');
+app.use(compression());
+---
+
+--> Turn off console.log()
+--> Some console.log() needs to show in our log files
+
+--> Use relative URL on client-side
+--> Only works if using the same URL
+
+--> .gitignore --> .cache/
+git rm -r --cached <folder>
+
+--> Create final compressed JavaScript bundle
+"build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js --public-url ./"
+
+--> git commit -m 'Prepared app for deployment'
+
+2. Deploying app
+
+https://www.udemy.com/course/nodejs-express-mongodb-bootcamp/learn/lecture/15087432#questions/18696110
+https://www.freecodecamp.org/news/how-to-deploy-nodejs-application-with-render/amp/

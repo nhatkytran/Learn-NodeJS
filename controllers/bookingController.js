@@ -4,10 +4,11 @@ const handlerFactory = require('./handlerFactory');
 const { Booking, Tour, User } = require('./../models');
 const { AppError, catchAsync } = require('./../utils');
 
-const { STRIPE_SECRET_KEY } = process.env;
+const { NODE_ENV, STRIPE_SECRET_KEY } = process.env;
 
 exports.getCheckoutSession = catchAsync(async (req, res) => {
-  console.log('-->', req.params);
+  if (NODE_ENV === 'development') console.log('-->', req.params);
+
   const { tourId } = req.params;
 
   const query = Tour.findById(tourId);

@@ -86,7 +86,7 @@ if (formUserData) {
     const username = nameInput.value;
 
     formData.append('name', username);
-    console.log(photoInput.files);
+
     if (photoInput.files.length) formData.append('photo', photoInput.files[0]);
 
     saveBtn.textContent = 'Saving...';
@@ -133,7 +133,6 @@ const paymentBtn = document.querySelector('#book-tour');
 
 if (paymentBtn)
   paymentBtn.addEventListener('click', async event => {
-    console.log(event.target.dataset);
     const { tourId } = event.target.dataset;
 
     paymentBtn.textContent = 'Processing...';

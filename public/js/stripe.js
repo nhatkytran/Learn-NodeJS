@@ -7,9 +7,7 @@ const stripe = Stripe(
 
 const bookTour = async tourId => {
   try {
-    const res = await axios(
-      `http://127.0.0.1:3000/api/v1/bookings/checkout-session/${tourId}`
-    );
+    const res = await axios(`/api/v1/bookings/checkout-session/${tourId}`);
     console.log(res);
     const session = res.data.session;
 

@@ -8,6 +8,8 @@ const sendJWTCookie = (cookieName, token, res) => {
     httpOnly: true,
     // secure = false for testing purpose with Postman
     secure: false,
+    // maxAge = 5000 --> Cookie gets deleted automatically after time
+    // signed = true --> https://stackoverflow.com/questions/11897965/what-are-signed-cookies-in-connect-expressjs
   };
 
   if (NODE_ENV === 'production') cookieOptions.secure = true;

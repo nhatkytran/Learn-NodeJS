@@ -22,12 +22,12 @@ exports.signup = catchAsync(async (req, res) => {
   const user = await query;
 
   try {
-    const token = user.createEmailConfirmToken();
+    const token = await user.createEmailConfirmToken();
     await user.save({ validateModifiedOnly: true });
 
     const url = `${req.protocol}://${req.get(
       'host'
-    )}/email-confirm/${email}/${token}`;
+    )}/api/v1/users/email-confirm/${email}/${token}`;
     await new Email(user, url).sendEmailConfirm();
   } catch (error) {
     console.error(error);
@@ -45,23 +45,28 @@ exports.signup = catchAsync(async (req, res) => {
 exports.activateEmail = catchAsync(async (req, res) => {
   const { email, token } = req.params;
 
+  const { hashedToken } = await cryptoHash(token);
   const query = User.findOne({
     email,
-    activeEmailToken: await cryptoHash(token),
+    activeEmailToken: hashedToken,
   });
   const user = await query;
 
-  if (!user) throw new AppError('Invalid email or token', 400);
+  if (!user) throw new AppError('Invalid email or token!', 400);
 
   user.activeEmail = true;
   user.activeEmailToken = undefined;
 
   await user.save({ validateModifiedOnly: true });
 
-  const url = `${req.protocol}://${req.get('host')}/me`;
-  await new Email(user, url).sendWelcome();
-
-  await createSendToken(user._id, 201, res);
+  try {
+    const url = `${req.protocol}://${req.get('host')}/me`;
+    await new Email(user, url).sendWelcome();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    await createSendToken(user._id, 201, res);
+  }
 });
 
 exports.login = catchAsync(async (req, res) => {
@@ -83,11 +88,12 @@ exports.login = catchAsync(async (req, res) => {
 });
 
 exports.logout = catchAsync(async (_, res) => {
-  res.cookie('jwt', 'logged-out', {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true,
-  });
+  // res.cookie('jwt', 'logged-out', {
+  //   expires: new Date(Date.now() + 10 * 1000),
+  //   httpOnly: true,
+  // });
 
+  res.clearCookie('jwt');
   res.status(200).json({ status: 'success' });
 });
 

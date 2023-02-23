@@ -54,7 +54,7 @@ tourSchema.pre('save', function (next) {
 
 tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
-  this.start = Date.now();
+  // this.start = Date.now();
 
   next();
 });
@@ -68,11 +68,11 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-tourSchema.post(/^find/, function (_, next) {
-  console.log(`Query took ${Date.now() - this.start} milliseconds!`);
+// tourSchema.post(/^find/, function (_, next) {
+//   console.log(`Query took ${Date.now() - this.start} milliseconds!`);
 
-  next();
-});
+//   next();
+// });
 
 tourSchema.pre('aggregate', function (next) {
   if (!(this._pipeline.length && '$geoNear' in this._pipeline[0]))

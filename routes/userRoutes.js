@@ -31,11 +31,10 @@ const userRouter = express.Router();
 userRouter.use('/:userId/bookings', bookingRouter);
 
 userRouter.post('/signup', signup);
-
 userRouter.get('/email-confirm/:email/:token', activateEmail);
 
 userRouter.post('/login', login);
-userRouter.get('/logout', logout);
+userRouter.get('/logout', logout); // delete? --> clear Cookie
 
 userRouter.post('/forgotPassword', forgotPassword);
 userRouter.patch('/resetPassword/:email/:token', resetPassword);

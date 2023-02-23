@@ -9,6 +9,8 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
 
+const compression = require('compression');
+
 const globalErrorHandler = require('./controllers/errorController');
 const { AppError } = require('./utils');
 
@@ -57,6 +59,8 @@ app.use(
     ],
   })
 );
+
+app.use(compression());
 
 // Custom middleware
 
