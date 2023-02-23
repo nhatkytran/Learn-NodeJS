@@ -28,6 +28,7 @@ mongoose
   .then(() => {
     console.log('Database connection - Successful');
 
+    // Get PORT when deployed
     const port = PORT || 3000;
     server = app.listen(port, '127.0.0.1', () => {
       console.log(`App running on port ${port}...`);
