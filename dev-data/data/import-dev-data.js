@@ -12,7 +12,7 @@ const { DATABASE, DATABASE_NAME, DATABASE_PASSWORD } = process.env;
 const getData = fileName =>
   JSON.parse(fs.readFileSync(path.join(__dirname, fileName), 'utf-8'));
 
-const tours = getData('oneTour.json');
+const tours = getData('tours.json');
 const users = getData('users.json');
 const reviews = getData('reviews.json');
 
