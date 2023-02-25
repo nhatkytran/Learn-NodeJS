@@ -10,6 +10,7 @@ const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
 
 const compression = require('compression');
+const cors = require('cors');
 
 const globalErrorHandler = require('./controllers/errorController');
 const { AppError } = require('./utils');
@@ -60,7 +61,13 @@ app.use(
   })
 );
 
+// Deploy
 app.use(compression());
+
+app.enable('trust proxy');
+
+app.use(cors());
+app.options('*', cors());
 
 // Custom middleware
 

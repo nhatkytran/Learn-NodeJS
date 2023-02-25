@@ -1464,7 +1464,7 @@ git rm -r --cached <folder>
 
 --> git commit -m 'Prepared app for deployment'
 
-2. Deploying app
+2. Deploying app --> NODE_ENV=production
 
 https://www.udemy.com/course/nodejs-express-mongodb-bootcamp/learn/lecture/15087432#questions/18696110
 https://www.freecodecamp.org/news/how-to-deploy-nodejs-application-with-render/amp/
@@ -1477,3 +1477,68 @@ https://www.freecodecamp.org/news/how-to-deploy-nodejs-application-with-render/a
 }
 --> process.env.PORT
 --> test gzip compression
+
+3. Testing for Secure HTTPS
+
+--> app.enable('trust proxy')
+--> secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+
+4. Responding to a SIGTERM Signal
+
+---
+process.on('SIGTERM', () => {
+  console.error('\n--- SIGTERM RECEIVED! Shutting down... ---\n');
+
+  if (server) server.close(() => console.log('SIGTERM - Process terminated!'));
+});
+---
+
+6. Implementing CORS - Cross-Origin Resouce Sharing
+
+Domain A to Domain A --> Same-origin request
+Domain A to Doamin B --> Cross-origin request
+
+--> Call API on different URL --> Cross-Origin Request
+--> npm install cors
+
+---
+const cors = require('cors');
+
+cors() --> Access-Control-Allow-Origin *
+
+// For all
+app.use(cors());
+
+// api.natours.com, front-end natours.com
+app.use(cors({
+  origin: 'https://www.natours.comn'
+}));
+
+// For route
+app.use('/api/v1/tours', cors(), tourRouter);
+---
+
+--> Simple request --> Get and Post
+--> Non-simple request --> Put, Patch, Delete or Request that sends Cookie or use nonstandard headers
+
+--> Non-simple request requires preflight phase
+--> Whenever there is a non-simple request, the browser will then automatically \
+issue the preflight phase
+--> Before the real request actually happens (like delete request), the browser \
+first does an options request inorder to figure out if the actual request \
+is safe to send
+
+--> Server receives Options request (just like HTTP requests)
+--> Sends back the same Access-Control-Allow-Origin header
+--> So the browser knows the actual request is safe to perform and execute
+
+---
+app.options(*, cors());
+// app.options('/api/v1/tours/:id', cors());
+---
+
+"engines": {
+  "node": "^16"
+}
+
+7. Stripe Webhooks

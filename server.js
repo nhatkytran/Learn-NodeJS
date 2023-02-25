@@ -41,3 +41,10 @@ process.on('unhandledRejection', error => {
 
   if (server) server.close(() => process.exit(1));
 });
+
+// SIGTERM --> SIGKILL will kill the process
+process.on('SIGTERM', () => {
+  console.error('\n--- SIGTERM RECEIVED! Shutting down... ---\n');
+
+  if (server) server.close(() => console.log('SIGTERM - Process terminated!'));
+});

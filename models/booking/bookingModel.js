@@ -22,7 +22,7 @@ bookingSchema.pre('save', async function (next) {
 
   if (newParticipants > this.maxGroupSize)
     throw new AppError(
-      'Participants of this tour is full! Please choose another date!',
+      "Participants of this tour's date is full! Please choose another date!",
       400
     );
 

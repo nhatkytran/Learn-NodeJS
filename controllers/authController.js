@@ -65,7 +65,7 @@ exports.activateEmail = catchAsync(async (req, res) => {
   } catch (error) {
     console.error(error);
   } finally {
-    await createSendToken(user._id, 201, res);
+    await createSendToken(user._id, 201, req, res);
   }
 });
 
@@ -84,7 +84,7 @@ exports.login = catchAsync(async (req, res) => {
 
   if (!user.activeEmail) throw new AppError('Inactive email!', 401);
 
-  await createSendToken(user._id, 200, res);
+  await createSendToken(user._id, 200, req, res);
 });
 
 exports.logout = catchAsync(async (_, res) => {
@@ -242,7 +242,7 @@ exports.resetPassword = catchAsync(async (req, res) => {
 
   await user.save({ validateModifiedOnly: true });
 
-  await createSendToken(user._id, 200, res);
+  await createSendToken(user._id, 200, req, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res) => {
@@ -265,5 +265,5 @@ exports.updatePassword = catchAsync(async (req, res) => {
 
   await user.save({ validateModifiedOnly: true });
 
-  await createSendToken(user._id, 200, res);
+  await createSendToken(user._id, 200, req, res);
 });
