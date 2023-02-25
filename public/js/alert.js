@@ -3,11 +3,11 @@ const hideAlert = () => {
   if (alert) alert.remove();
 };
 
-export const showAlert = (type, message) => {
+export const showAlert = (type, message, timeout = 3) => {
   hideAlert();
 
   const alertMarkup = `<div class="alert alert--${type}">${message}</div>`;
   document.body.insertAdjacentHTML('afterbegin', alertMarkup);
 
-  setTimeout(hideAlert, 3000);
+  setTimeout(hideAlert, timeout * 1000);
 };

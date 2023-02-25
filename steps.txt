@@ -1558,3 +1558,13 @@ app.options(*, cors());
 
 Flow: getCheckoutSession --> success_url --> webhookCheckout \
 --> createBookingCheckout(session)
+
+--- alert
+
+--> body(data-alert=`${alert ? alert : ''}`)
+--> ?alert=booking
+--> viewController.alerts
+
+--> Stripe completed --> Create book --> Take time to process
+
+res.locals.alert = 'Your booking was successful! Please check your email for a confirmation. If your booking doesn't show up here immediately, please come back later.';

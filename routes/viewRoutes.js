@@ -1,6 +1,7 @@
 const express = require('express');
 
 const {
+  alerts,
   getOverview,
   getTour,
   getLoginForm,
@@ -10,6 +11,8 @@ const {
 const { protect, isLoggedIn } = require('./../controllers/authController');
 
 const viewRouter = express.Router();
+
+viewRouter.use(alerts);
 
 viewRouter.get('/me', protect, getAccount);
 viewRouter.get('/my-tours', protect, getMyTours);

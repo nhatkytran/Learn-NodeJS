@@ -4,6 +4,7 @@ import 'regenerator-runtime/runtime';
 import { displayMap } from './mapbox';
 import { login, logout } from './login';
 import { updateSettings } from './updateSettings';
+import { showAlert } from './alert';
 import bookTour from './stripe';
 
 // Tour
@@ -139,3 +140,6 @@ if (paymentBtn)
 
     await bookTour(tourId);
   });
+
+const alertMessage = document.body.dataset.alert;
+if (alertMessage) showAlert('success', alertMessage, 10);
