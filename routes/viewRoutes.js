@@ -8,14 +8,13 @@ const {
   getMyTours,
 } = require('./../controllers/viewController');
 const { protect, isLoggedIn } = require('./../controllers/authController');
-const { createBookingCheckout } = require('./../controllers/bookingController');
 
 const viewRouter = express.Router();
 
 viewRouter.get('/me', protect, getAccount);
 viewRouter.get('/my-tours', protect, getMyTours);
 
-viewRouter.route('/').get(createBookingCheckout, isLoggedIn, getOverview);
+viewRouter.route('/').get(isLoggedIn, getOverview);
 
 viewRouter.use(isLoggedIn);
 

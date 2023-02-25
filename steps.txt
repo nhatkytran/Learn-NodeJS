@@ -1542,3 +1542,19 @@ app.options(*, cors());
 }
 
 7. Stripe Webhooks
+
+--> Endpoint --> {{URL}}webhook-checkout
+--> Event --> checkout.session.completed
+
+--> app.js --> app.post('/webhook-checkout', webhookCheckout)
+--> before app.user(express.json({ limit: '10kb' }))
+--> Stripe function needs to read the body in the raw form
+
+--> app.post('webhook-checkout', express.raw({
+  type: 'application/json'
+}), webhookCheckout)
+
+--> change success_url, change route, controller
+
+Flow: getCheckoutSession --> success_url --> webhookCheckout \
+--> createBookingCheckout(session)

@@ -23,6 +23,8 @@ const {
   bookingRouter,
 } = require('./routes');
 
+const { webhookCheckout } = require('./controllers/bookingController');
+
 const { NODE_ENV } = process.env;
 
 const app = express();
@@ -39,6 +41,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(helmet());
 
 if (NODE_ENV === 'development') app.use(morgan('dev'));
+
+app.post(
+  '/webhook-checkout',
+  express.raw({
+    type: 'application/json',
+  }),
+  webhookCheckout
+);
 
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
